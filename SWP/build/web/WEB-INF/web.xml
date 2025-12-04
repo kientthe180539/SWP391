@@ -4,9 +4,17 @@
         <servlet-name>HomePageController</servlet-name>
         <servlet-class>Controller.HomePage.HomePageController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>HouseKeepingController</servlet-name>
+        <servlet-class>Controller.Housekeeping.HouseKeepingController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>HomePageController</servlet-name>
         <url-pattern>/home</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>HouseKeepingController</servlet-name>
+        <url-pattern>/HouseKeepingController</url-pattern>
     </servlet-mapping>
     <welcome-file-list>
         <welcome-file>home</welcome-file>

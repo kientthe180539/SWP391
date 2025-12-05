@@ -247,36 +247,5 @@ public class HousekeepingController extends HttpServlet {
     public String getServletInfo() {
         return "Housekeeping module controller";
     }
-    public static void main(String[] args) throws Exception {
-    System.out.println("===== HOUSEKEEPING DASHBOARD TEST (REAL DATABASE) =====");
-
-    // 1. Fake user housekeeping
-    int staffId = 3; // ID nhân viên có thật trong database của bạn
-    LocalDate today = LocalDate.now();
-
-    // 2. Gọi DAO thật
-    List<Room> roomsNeedCleaning = DAOHousekeeping.INSTANCE.getRoomsNeedingCleaning();
-    List<HousekeepingTask> todayTasks = DAOHousekeeping.INSTANCE.getTasksForStaffOnDate(staffId, today);
-    List<StaffAssignment> todayAssignments = DAOHousekeeping.INSTANCE.getAssignmentsForStaffOnDate(staffId, today);
-
-    // 3. In kết quả
-    System.out.println("\n--- ROOMS NEED CLEANING ---");
-    roomsNeedCleaning.forEach(r -> System.out.println("Room " + r.getRoomNumber() + " (" + r.getStatus() + ")"));
-
-    System.out.println("\n--- TODAY TASKS FOR STAFF " + staffId + " ---");
-    todayTasks.forEach(t -> System.out.println(
-        "TaskID=" + t.getTaskId() +
-        ", Room=" + t.getRoomId() +
-        ", Status=" + t.getStatus()
-    ));
-
-    System.out.println("\n--- TODAY ASSIGNMENTS FOR STAFF " + staffId + " ---");
-    todayAssignments.forEach(a -> System.out.println(
-        "AssignmentID=" + a.getAssignmentId() +
-        ", Shift=" + a.getShift()
-    ));
-
-    System.out.println("\n===== TEST COMPLETED =====");
-}
 
 }

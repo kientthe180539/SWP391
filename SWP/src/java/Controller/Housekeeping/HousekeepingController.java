@@ -6,51 +6,17 @@ import Model.Room;
 import Model.StaffAssignment;
 import Model.User;
 import java.io.IOException;
-<<<<<<< HEAD
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
-=======
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
->>>>>>> main
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-<<<<<<< HEAD
-/**
- *
- * @author anhem
- */
-public class HousekeepingController extends HttpServlet {
-
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet HouseKeepingController</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet HouseKeepingController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-=======
 @WebServlet(
         name = "HousekeepingController",
         urlPatterns = {
@@ -62,7 +28,6 @@ public class HousekeepingController extends HttpServlet {
             "/housekeeping/room-update",
             "/housekeeping/create-task",
             "/housekeeping/rooms"
->>>>>>> main
         }
 )
 public class HousekeepingController extends HttpServlet {
@@ -277,12 +242,21 @@ public class HousekeepingController extends HttpServlet {
                 .forward(request, response);
     }
 
-   
-
-    
     @Override
     public String getServletInfo() {
         return "Housekeeping module controller";
+    }
+
+    private void handleUpdateTask(HttpServletRequest request, HttpServletResponse response) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    private void handleCreateIssueReport(HttpServletRequest request, HttpServletResponse response) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    private void handleUpdateRoomStatus(HttpServletRequest request, HttpServletResponse response) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
 }

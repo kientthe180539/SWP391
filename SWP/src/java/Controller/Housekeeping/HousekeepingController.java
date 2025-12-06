@@ -8,7 +8,6 @@ import Model.User;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -17,7 +16,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 
 @WebServlet(
         name = "HousekeepingController",
@@ -260,9 +258,6 @@ public class HousekeepingController extends HttpServlet {
                 .forward(request, response);
     }
 
-   
-
-    
     @Override
     public String getServletInfo() {
         return "Housekeeping module controller";

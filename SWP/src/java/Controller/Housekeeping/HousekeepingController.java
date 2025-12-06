@@ -53,7 +53,23 @@ public class HousekeepingController extends HttpServlet {
         if (!ensureHousekeeping(request, response)) {
             return;
         }
-
+           String path = request.getServletPath();
+        switch (path) {
+            case "/housekeeping/dashboard" ->
+                showDashboard(request, response);
+            case "/housekeeping/tasks" ->
+                showTaskList(request, response);
+            case "/housekeeping/task-detail" ->
+                showTaskDetail(request, response);
+            case "/housekeeping/issue-report" ->
+                showIssueReportForm(request, response);
+            case "/housekeeping/room-update" ->
+                showRoomUpdateForm(request, response);
+            case "/housekeeping/rooms" ->
+                showRoomList(request, response);
+            default ->
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
        
     }
 
@@ -257,6 +273,14 @@ public class HousekeepingController extends HttpServlet {
     }
 
     private void handleUpdateRoomStatus(HttpServletRequest request, HttpServletResponse response) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    private void showIssueReportForm(HttpServletRequest request, HttpServletResponse response) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    private void showRoomUpdateForm(HttpServletRequest request, HttpServletResponse response) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 

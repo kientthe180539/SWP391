@@ -6,8 +6,7 @@ import Model.Room;
 import Model.StaffAssignment;
 import Model.User;
 import java.io.IOException;
-import java.io.PrintWriter;
-import jakarta.servlet.ServletException;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -55,7 +54,7 @@ public class HousekeepingController extends HttpServlet {
         if (!ensureHousekeeping(request, response)) {
             return;
         }
-           String path = request.getServletPath();
+        String path = request.getServletPath();
         switch (path) {
             case "/housekeeping/dashboard" ->
                 showDashboard(request, response);
@@ -72,7 +71,7 @@ public class HousekeepingController extends HttpServlet {
             default ->
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
-       
+
     }
 
     @Override
@@ -120,7 +119,6 @@ public class HousekeepingController extends HttpServlet {
         }
     }
     
-   // ======================================================
     // 1. Housekeeping Dashboard
     // ======================================================
     private void showDashboard(HttpServletRequest request, HttpServletResponse response)
@@ -199,7 +197,7 @@ public class HousekeepingController extends HttpServlet {
         request.getRequestDispatcher("/Views/Housekeeping/TaskList.jsp")
                 .forward(request, response);
     }
-       // ======================================================
+
     // Room List Screen
     // ======================================================
     private void showRoomList(HttpServletRequest request, HttpServletResponse response)
@@ -233,7 +231,10 @@ public class HousekeepingController extends HttpServlet {
         request.getRequestDispatcher("/Views/Housekeeping/RoomList.jsp").forward(request, response);
     }
 
-   
+
+    // ======================================================
+    // 3. Cleaning Task Detail / Update Screen
+    // ======================================================
     private void showTaskDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String idStr = request.getParameter("id");
@@ -258,29 +259,182 @@ public class HousekeepingController extends HttpServlet {
                 .forward(request, response);
     }
 
+
+    private void handleUpdateTask(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String idStr = request.getParameter("taskId");
+        String statusStr = request.getParameter("status"); // NEW / IN_PROGRESS / DONE
+        String note = request.getParameter("note");
+
+        if (idStr == null || statusStr == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
+            return;
+        }
+
+        int taskId = Integer.parseInt(idStr);
+        try {
+            HousekeepingTask.TaskStatus newStatus
+                    = HousekeepingTask.TaskStatus.valueOf(statusStr);
+
+            boolean ok = DAOHousekeeping.INSTANCE.updateTaskStatusAndNote(taskId, newStatus, note);
+
+            if (ok) {
+                request.setAttribute("type", "success");
+                request.setAttribute("mess", "Cập nhật task thành công");
+                request.setAttribute("href", "housekeeping/tasks");
+            } else {
+                request.setAttribute("type", "error");
+                request.setAttribute("mess", "Cập nhật task thất bại");
+                request.setAttribute("href", "housekeeping/task-detail?id=" + taskId);
+            }
+        } catch (IllegalArgumentException ex) {
+            request.setAttribute("type", "error");
+            request.setAttribute("mess", "Trạng thái không hợp lệ");
+            request.setAttribute("href", "housekeeping/task-detail?id=" + idStr);
+        }
+
+        request.getRequestDispatcher("Views/Housekeeping/TaskDetail.jsp")
+                .forward(request, response);
+    }
+
+    // ======================================================
+    // 6. Equipment Issue Report Screen
+    // (4 & 5 Supplies: có thể dùng chung cơ chế tạo issue SUPPLY)
+    // ======================================================
+    // ======================================================
+    // 6. Equipment Issue Report Screen
+    // (4 & 5 Supplies: có thể dùng chung cơ chế tạo issue SUPPLY)
+    // ======================================================
+    private void showIssueReportForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Fetch all rooms for dropdown
+        List<Room> rooms = DAOHousekeeping.INSTANCE.getAllRooms();
+        request.setAttribute("rooms", rooms);
+
+        // Có thể nhận taskId/roomId từ query để pre-fill
+        String roomIdStr = request.getParameter("roomId");
+        Room room = null;
+        if (roomIdStr != null && !roomIdStr.isBlank()) {
+            int roomId = Integer.parseInt(roomIdStr);
+            room = DAOHousekeeping.INSTANCE.getRoomById(roomId);
+        }
+        request.setAttribute("room", room);
+
+        request.getRequestDispatcher("/Views/Housekeeping/IssueReport.jsp")
+                .forward(request, response);
+    }
+
+    private void handleCreateIssueReport(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
+
+        String roomIdStr = request.getParameter("roomId");
+        String issueTypeStr = request.getParameter("issueType"); // EQUIPMENT hoặc SUPPLY
+        String description = request.getParameter("description");
+
+        if (roomIdStr == null || issueTypeStr == null || description == null || description.isBlank()) {
+            request.setAttribute("type", "error");
+            request.setAttribute("mess", "Thiếu thông tin báo sự cố");
+            request.setAttribute("href", "housekeeping/issue-report");
+            request.getRequestDispatcher("Views/Housekeeping/IssueReport.jsp")
+                    .forward(request, response);
+            return;
+        }
+
+        int roomId = Integer.parseInt(roomIdStr);
+
+        DAOHousekeeping.IssueType issueType;
+        try {
+            issueType = DAOHousekeeping.IssueType.valueOf(issueTypeStr);
+        } catch (IllegalArgumentException ex) {
+            issueType = DAOHousekeeping.IssueType.OTHER;
+        }
+
+        boolean ok = DAOHousekeeping.INSTANCE.createIssueReport(
+                roomId,
+                currentUser.getUserId(),
+                issueType,
+                description
+        );
+
+        if (ok) {
+            request.setAttribute("type", "success");
+            request.setAttribute("mess", "Gửi báo cáo sự cố thành công");
+            request.setAttribute("href", "housekeeping/dashboard");
+        } else {
+            request.setAttribute("type", "error");
+            request.setAttribute("mess", "Gửi báo cáo sự cố thất bại");
+            request.setAttribute("href", "housekeeping/issue-report?roomId=" + roomId);
+        }
+
+        request.getRequestDispatcher("Views/Housekeeping/IssueReport.jsp")
+                .forward(request, response);
+    }
+
+
+    // ======================================================
+    // 7. Room State Update Screen
+    // ======================================================
+    private void showRoomUpdateForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String roomIdStr = request.getParameter("roomId");
+        if (roomIdStr == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing room id");
+            return;
+        }
+
+        int roomId = Integer.parseInt(roomIdStr);
+        Room room = DAOHousekeeping.INSTANCE.getRoomById(roomId);
+        if (room == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Room not found");
+            return;
+        }
+
+        request.setAttribute("room", room);
+        request.getRequestDispatcher("Views/Housekeeping/RoomStateUpdate.jsp")
+                .forward(request, response);
+    }
+
+    private void handleUpdateRoomStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String roomIdStr = request.getParameter("roomId");
+        String statusStr = request.getParameter("status"); // DIRTY/CLEANING/AVAILABLE/MAINTENANCE...
+
+        if (roomIdStr == null || statusStr == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
+            return;
+        }
+
+        int roomId = Integer.parseInt(roomIdStr);
+        try {
+            Room.Status newStatus = Room.Status.valueOf(statusStr);
+            boolean ok = DAOHousekeeping.INSTANCE.updateRoomStatus(roomId, newStatus);
+
+            if (ok) {
+                request.setAttribute("type", "success");
+                request.setAttribute("mess", "Cập nhật trạng thái phòng thành công");
+                request.setAttribute("href", "housekeeping/dashboard");
+            } else {
+                request.setAttribute("type", "error");
+                request.setAttribute("mess", "Cập nhật trạng thái phòng thất bại");
+                request.setAttribute("href", "housekeeping/room-update?roomId=" + roomId);
+            }
+
+            request.getRequestDispatcher("Views/Housekeeping/RoomStateUpdate.jsp")
+                    .forward(request, response);
+        } catch (IllegalArgumentException ex) {
+            request.setAttribute("type", "error");
+            request.setAttribute("mess", "Trạng thái phòng không hợp lệ");
+            request.setAttribute("href", "housekeeping/room-update?roomId=" + roomIdStr);
+            request.getRequestDispatcher("Views/Housekeeping/RoomStateUpdate.jsp")
+                    .forward(request, response);
+        }
+    }
+
     @Override
     public String getServletInfo() {
         return "Housekeeping module controller";
     }
 
-    private void handleUpdateTask(HttpServletRequest request, HttpServletResponse response) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    private void handleCreateIssueReport(HttpServletRequest request, HttpServletResponse response) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    private void handleUpdateRoomStatus(HttpServletRequest request, HttpServletResponse response) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    private void showIssueReportForm(HttpServletRequest request, HttpServletResponse response) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    private void showRoomUpdateForm(HttpServletRequest request, HttpServletResponse response) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
 
 }

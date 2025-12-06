@@ -114,7 +114,8 @@ public class AuthenController extends HttpServlet {
         }
     }
 
-        private void handleLogin(HttpServletRequest request, HttpServletResponse response)
+
+    private void handleLogin(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String identifier = request.getParameter("identifier");
         String password = request.getParameter("password");
@@ -150,7 +151,6 @@ public class AuthenController extends HttpServlet {
         }
         request.getRequestDispatcher("Views/Authen/Login.jsp").forward(request, response);
     }
-
 
     @Override
     public String getServletInfo() {

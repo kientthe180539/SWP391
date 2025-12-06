@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet(name = "AuthenController", urlPatterns = {"/login", "/register", "/forgotPassword", "/resetPassword"})
 public class AuthenController extends HttpServlet {
 
-    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String path = request.getServletPath();
@@ -115,7 +114,7 @@ public class AuthenController extends HttpServlet {
         }
     }
 
-    private void handleLogin(HttpServletRequest request, HttpServletResponse response)
+        private void handleLogin(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String identifier = request.getParameter("identifier");
         String password = request.getParameter("password");
@@ -151,6 +150,7 @@ public class AuthenController extends HttpServlet {
         }
         request.getRequestDispatcher("Views/Authen/Login.jsp").forward(request, response);
     }
+
 
     @Override
     public String getServletInfo() {

@@ -163,10 +163,10 @@
                                     <small class="text-muted">Showing ${employees.size()} of ${totalEmployees}
                                         employees</small>
                                     <ul class="pagination pagination-sm mb-0">
-                                        <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+<!--                                        <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
                                             <a class="page-link"
                                                 href="?page=${currentPage - 1}&search=${search}&roleId=${roleId}&status=${status}&sortBy=${sortBy}">Previous</a>
-                                        </li>
+                                        </li>-->
                                         <c:forEach begin="1" end="${totalPages}" var="p">
                                             <li class="page-item ${currentPage == p ? 'active' : ''}">
                                                 <a class="page-link"

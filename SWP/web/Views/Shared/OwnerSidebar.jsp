@@ -8,13 +8,13 @@
             </div>
 
             <ul class="sidebar-nav">
-                <li class="nav-item">
+<!--                <li class="nav-item">
                     <a href="<c:url value='/owner/dashboard'/>"
                         class="nav-link ${pageContext.request.servletPath.endsWith('Dashboard.jsp') ? 'active' : ''}">
                         <i class="bi bi-speedometer2"></i>
                         <span>Dashboard</span>
                     </a>
-                </li>
+                </li>-->
                 <li class="nav-item">
                     <a href="<c:url value='/owner/employees'/>"
                         class="nav-link ${pageContext.request.servletPath.endsWith('EmployeeList.jsp') || pageContext.request.servletPath.endsWith('EmployeeDetail.jsp') || pageContext.request.servletPath.endsWith('CreateEmployee.jsp') ? 'active' : ''}">
@@ -22,7 +22,7 @@
                         <span>Employees</span>
                     </a>
                 </li>
-                <li class="nav-item">
+<!--                <li class="nav-item">
                     <a href="<c:url value='/owner/assignments'/>"
                         class="nav-link ${pageContext.request.servletPath.endsWith('JobAssignment.jsp') ? 'active' : ''}">
                         <i class="bi bi-calendar-check"></i>
@@ -49,7 +49,7 @@
                         <i class="bi bi-door-open-fill"></i>
                         <span>Room Management</span>
                     </a>
-                </li>
+                </li>-->
             </ul>
 
             <div class="sidebar-footer">

@@ -54,15 +54,7 @@
                                                 </option>
                                             </select>
                                         </div>
-                                        <div class="col-md-2">
-                                            <select name="status" class="form-select form-select-sm">
-                                                <option value="">All Status</option>
-                                                <option value="true" ${status=='true' ? 'selected' : '' }>Active
-                                                </option>
-                                                <option value="false" ${status=='false' ? 'selected' : '' }>Inactive
-                                                </option>
-                                            </select>
-                                        </div>
+
                                         <div class="col-md-2">
                                             <select name="sortBy" class="form-select form-select-sm">
                                                 <option value="user_id" ${sortBy=='user_id' ? 'selected' : '' }>Sort by
@@ -88,7 +80,6 @@
                                                 <th>Name</th>
                                                 <th>Role</th>
                                                 <th>Contact</th>
-                                                <th>Status</th>
                                                 <th class="text-end pe-4">Actions</th>
                                             </tr>
                                         </thead>
@@ -129,28 +120,13 @@
                                                         <div class="small"><i class="bi bi-phone me-1"></i> ${e.phone}
                                                         </div>
                                                     </td>
-                                                    <td>
-                                                        <span class="badge ${e.active ? 'bg-success' : 'bg-danger'}">
-                                                            ${e.active ? 'Active' : 'Inactive'}
-                                                        </span>
-                                                    </td>
+                                                    
                                                     <td class="text-end pe-4">
                                                         <a href="<c:url value='/owner/employee-detail'><c:param name='id' value='${e.userId}'/></c:url>"
                                                             class="btn btn-sm btn-outline-secondary me-1">
                                                             Edit
                                                         </a>
-                                                        <form action="<c:url value='/owner/employees'/>" method="post"
-                                                            class="d-inline">
-                                                            <input type="hidden" name="action" value="toggleStatus">
-                                                            <input type="hidden" name="userId" value="${e.userId}">
-                                                            <input type="hidden" name="currentStatus"
-                                                                value="${e.active}">
-                                                            <button type="submit"
-                                                                class="btn btn-sm ${e.active ? 'btn-outline-danger' : 'btn-outline-success'}"
-                                                                onclick="return confirm('Are you sure you want to ${e.active ? 'deactivate' : 'activate'} this user?')">
-                                                                ${e.active ? 'Lock' : 'Unlock'}
-                                                            </button>
-                                                        </form>
+                                                        
                                                     </td>
                                                 </tr>
                                             </c:forEach>
@@ -163,19 +139,19 @@
                                     <small class="text-muted">Showing ${employees.size()} of ${totalEmployees}
                                         employees</small>
                                     <ul class="pagination pagination-sm mb-0">
-<!--                                        <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                        <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
                                             <a class="page-link"
-                                                href="?page=${currentPage - 1}&search=${search}&roleId=${roleId}&status=${status}&sortBy=${sortBy}">Previous</a>
-                                        </li>-->
+                                                href="?page=${currentPage - 1}&search=${search}&roleId=${roleId}&sortBy=${sortBy}">Previous</a>
+                                        </li>
                                         <c:forEach begin="1" end="${totalPages}" var="p">
                                             <li class="page-item ${currentPage == p ? 'active' : ''}">
                                                 <a class="page-link"
-                                                    href="?page=${p}&search=${search}&roleId=${roleId}&status=${status}&sortBy=${sortBy}">${p}</a>
+                                                    href="?page=${p}&search=${search}&roleId=${roleId}&sortBy=${sortBy}">${p}</a>
                                             </li>
                                         </c:forEach>
                                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
                                             <a class="page-link"
-                                                href="?page=${currentPage + 1}&search=${search}&roleId=${roleId}&status=${status}&sortBy=${sortBy}">Next</a>
+                                                href="?page=${currentPage + 1}&search=${search}&roleId=${roleId}&sortBy=${sortBy}">Next</a>
                                         </li>
                                     </ul>
                                 </nav>

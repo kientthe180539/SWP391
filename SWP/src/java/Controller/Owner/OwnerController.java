@@ -28,6 +28,7 @@ public class OwnerController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+         
         
         // Authorization check (Role ID 4 = Owner)
         HttpSession session = request.getSession();

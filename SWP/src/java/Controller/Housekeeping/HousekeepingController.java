@@ -54,6 +54,7 @@ public class HousekeepingController extends HttpServlet {
         if (!ensureHousekeeping(request, response)) {
             return;
         }
+
         String path = request.getServletPath();
         switch (path) {
             case "/housekeeping/dashboard" ->
@@ -118,7 +119,6 @@ public class HousekeepingController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
-    
     // 1. Housekeeping Dashboard
     // ======================================================
     private void showDashboard(HttpServletRequest request, HttpServletResponse response)
@@ -147,6 +147,7 @@ public class HousekeepingController extends HttpServlet {
                 .forward(request, response);
     }
 
+  
     // ======================================================
     // 2. Cleaning Task List Screen
     // ======================================================
@@ -197,6 +198,7 @@ public class HousekeepingController extends HttpServlet {
         request.getRequestDispatcher("/Views/Housekeeping/TaskList.jsp")
                 .forward(request, response);
     }
+
 
     // Room List Screen
     // ======================================================
@@ -259,7 +261,6 @@ public class HousekeepingController extends HttpServlet {
                 .forward(request, response);
     }
 
-
     private void handleUpdateTask(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String idStr = request.getParameter("taskId");
@@ -281,19 +282,19 @@ public class HousekeepingController extends HttpServlet {
             if (ok) {
                 request.setAttribute("type", "success");
                 request.setAttribute("mess", "Cập nhật task thành công");
-                request.setAttribute("href", "housekeeping/tasks");
+                request.setAttribute("href", "/housekeeping/tasks");
             } else {
                 request.setAttribute("type", "error");
                 request.setAttribute("mess", "Cập nhật task thất bại");
-                request.setAttribute("href", "housekeeping/task-detail?id=" + taskId);
+                request.setAttribute("href", "/housekeeping/task-detail?id=" + taskId);
             }
         } catch (IllegalArgumentException ex) {
             request.setAttribute("type", "error");
             request.setAttribute("mess", "Trạng thái không hợp lệ");
-            request.setAttribute("href", "housekeeping/task-detail?id=" + idStr);
+            request.setAttribute("href", "/housekeeping/task-detail?id=" + idStr);
         }
 
-        request.getRequestDispatcher("Views/Housekeeping/TaskDetail.jsp")
+        request.getRequestDispatcher("/Views/Housekeeping/TaskDetail.jsp")
                 .forward(request, response);
     }
 
@@ -336,7 +337,8 @@ public class HousekeepingController extends HttpServlet {
             request.setAttribute("type", "error");
             request.setAttribute("mess", "Thiếu thông tin báo sự cố");
             request.setAttribute("href", "housekeeping/issue-report");
-            request.getRequestDispatcher("Views/Housekeeping/IssueReport.jsp")
+
+            request.getRequestDispatcher("/Views/Housekeeping/IssueReport.jsp")
                     .forward(request, response);
             return;
         }
@@ -367,7 +369,8 @@ public class HousekeepingController extends HttpServlet {
             request.setAttribute("href", "housekeeping/issue-report?roomId=" + roomId);
         }
 
-        request.getRequestDispatcher("Views/Housekeeping/IssueReport.jsp")
+
+        request.getRequestDispatcher("/Views/Housekeeping/IssueReport.jsp")
                 .forward(request, response);
     }
 
@@ -391,10 +394,11 @@ public class HousekeepingController extends HttpServlet {
         }
 
         request.setAttribute("room", room);
-        request.getRequestDispatcher("Views/Housekeeping/RoomStateUpdate.jsp")
+        request.getRequestDispatcher("/Views/Housekeeping/RoomStateUpdate.jsp")
                 .forward(request, response);
     }
-
+    
+                //  updateRoomStatus
     private void handleUpdateRoomStatus(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String roomIdStr = request.getParameter("roomId");
@@ -420,13 +424,13 @@ public class HousekeepingController extends HttpServlet {
                 request.setAttribute("href", "housekeeping/room-update?roomId=" + roomId);
             }
 
-            request.getRequestDispatcher("Views/Housekeeping/RoomStateUpdate.jsp")
+            request.getRequestDispatcher("/Views/Housekeeping/RoomStateUpdate.jsp")
                     .forward(request, response);
         } catch (IllegalArgumentException ex) {
             request.setAttribute("type", "error");
             request.setAttribute("mess", "Trạng thái phòng không hợp lệ");
             request.setAttribute("href", "housekeeping/room-update?roomId=" + roomIdStr);
-            request.getRequestDispatcher("Views/Housekeeping/RoomStateUpdate.jsp")
+            request.getRequestDispatcher("/Views/Housekeeping/RoomStateUpdate.jsp")
                     .forward(request, response);
         }
     }
@@ -436,5 +440,7 @@ public class HousekeepingController extends HttpServlet {
         return "Housekeeping module controller";
     }
 
-
 }
+
+
+

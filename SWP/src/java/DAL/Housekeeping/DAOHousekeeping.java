@@ -54,7 +54,6 @@ public class DAOHousekeeping extends DAO {
         return list;
     }
 
-    // tìm thong tin Room cần vệ sinh
 
     public List<Room> getRoomsNeedingCleaning() {
         List<Room> list = new ArrayList<>();
@@ -447,7 +446,6 @@ public class DAOHousekeeping extends DAO {
         return list;
     }
 
-
     public int countTasks(int staffId, LocalDate dateFrom, LocalDate dateTo, String statusStr, String search) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM housekeeping_tasks WHERE assigned_to = ?");
         
@@ -540,7 +538,6 @@ public class DAOHousekeeping extends DAO {
         return list;
     }
 
-
     public int countRooms(String statusStr, String search) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM rooms WHERE 1=1");
         
@@ -567,12 +564,6 @@ public class DAOHousekeeping extends DAO {
         return 0;
     }
     // ======================================================
-    // StaffAssignment – phân ca làm việc
-    // ======================================================
-    
-
-
-    // ======================================================
     // Get Housekeeping Staff
     // ======================================================
     public List<Model.User> getHousekeepingStaff() {
@@ -593,8 +584,5 @@ public class DAOHousekeeping extends DAO {
         }
         return list;
     }
-   
-   
-
 
 }

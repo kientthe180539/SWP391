@@ -1,2 +1,5 @@
-/SWP/nbproject/
+/SWP/nbproject/private
+/SWP/build/
 /SWP/dist/
+*.class
+*.war

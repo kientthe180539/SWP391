@@ -23,6 +23,7 @@ public class SendEmail {
 
 //        final String username = "trantrungtoan17092003@gmail.com";
 //        final String password = "buay rvyn btzz yxpo";
+
         // Set up email server properties
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");

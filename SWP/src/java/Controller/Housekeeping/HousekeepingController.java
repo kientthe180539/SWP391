@@ -417,11 +417,11 @@ public class HousekeepingController extends HttpServlet {
             if (ok) {
                 request.setAttribute("type", "success");
                 request.setAttribute("mess", "Cập nhật trạng thái phòng thành công");
-                request.setAttribute("href", "housekeeping/dashboard");
+                request.setAttribute("href", "dashboard");
             } else {
                 request.setAttribute("type", "error");
                 request.setAttribute("mess", "Cập nhật trạng thái phòng thất bại");
-                request.setAttribute("href", "housekeeping/room-update?roomId=" + roomId);
+                request.setAttribute("href", "room-update?roomId=" + roomId);
             }
 
             request.getRequestDispatcher("/Views/Housekeeping/RoomStateUpdate.jsp")

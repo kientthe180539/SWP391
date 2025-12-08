@@ -54,6 +54,6 @@ public class SendEmail {
         }
     }
     public static void main(String[] args) {
-        SendEmail.sendMail("phongnnhe176274@fpt.edu.vn", "hello TPA", "<h1>qua dep</h1>");
+        SendEmail.sendMail("kienga446@gmail.com", "hello TPA", "<h1>qua dep</h1>");
     }
 }

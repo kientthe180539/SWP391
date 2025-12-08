@@ -15,7 +15,7 @@ public class HomePageController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-//         request.setAttribute("type", "success");
+//        request.setAttribute("type", "success");
 //        request.setAttribute("mess", "Thao tác thành công!");
 //        request.setAttribute("href", "home");
         request.getRequestDispatcher("Views/HomePage/HomePage.jsp").forward(request, response);

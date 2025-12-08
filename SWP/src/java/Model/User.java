@@ -10,8 +10,12 @@ public class User {
     // Regex pattern
     // ==========================
     // Số điện thoại VN
+//    private static final Pattern PHONE_PATTERN = Pattern.compile(
+//            "^(?:\\+84|84|0)(3[2-9]|9(1-9)|8[1-5]|7(?:[6-9]|0))\\d{1}([-.]?)\\d{3}\\2\\d{3}$"
+//    );
+    //simple test
     private static final Pattern PHONE_PATTERN = Pattern.compile(
-            "^(?:\\+84|84|0)(3[2-9]|8[1-5]|7(?:[6-9]|0))\\d{1}([-.]?)\\d{3}\\2\\d{3}$"
+            "^(\\+84|84|0)(\\d{9})$"
     );
 
     // Email
@@ -22,7 +26,6 @@ public class User {
     // ==========================
     // FIELDS (GIỮ NGUYÊN NHƯ DB)
     // ==========================
-
     private Integer userId;
     private String username;
     private String passwordHash;   // CHỈ có field này, lưu HASH
@@ -39,14 +42,14 @@ public class User {
 
     // Constructor này không bắt buộc truyền password (tùy bạn muốn dùng hay không)
     public User(Integer userId,
-                String username,
-                String fullName,
-                String email,
-                String phone,
-                Integer roleId,
-                Boolean isActive,
-                LocalDateTime createdAt,
-                LocalDateTime updatedAt) {
+            String username,
+            String fullName,
+            String email,
+            String phone,
+            Integer roleId,
+            Boolean isActive,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
 
         setUserId(userId);
         setUsername(username);
@@ -62,7 +65,6 @@ public class User {
     // ==========================
     // Getter / Setter + validate
     // ==========================
-
     public Integer getUserId() {
         return userId;
     }
@@ -87,8 +89,8 @@ public class User {
     }
 
     /**
-     * Dùng khi MAPPING DB -> MODEL:
-     * truyền trực tiếp hash lấy từ cột password_hash trong DB.
+     * Dùng khi MAPPING DB -> MODEL: truyền trực tiếp hash lấy từ cột
+     * password_hash trong DB.
      */
     public void setPasswordHash(String passwordHash) {
         if (passwordHash == null || passwordHash.isBlank()) {
@@ -98,8 +100,8 @@ public class User {
     }
 
     /**
-     * Dùng khi ĐĂNG KÝ / ĐỔI MẬT KHẨU:
-     * nhận password thường, tự động hash rồi gán vào passwordHash.
+     * Dùng khi ĐĂNG KÝ / ĐỔI MẬT KHẨU: nhận password thường, tự động hash rồi
+     * gán vào passwordHash.
      */
     public void setPlainPassword(String plainPassword) {
         if (plainPassword == null || plainPassword.isBlank()) {
@@ -112,8 +114,8 @@ public class User {
     }
 
     /**
-     * Dùng khi ĐĂNG NHẬP (nhận password thường từ form):
-     * Model sẽ tự hash password input và so sánh với passwordHash đã lưu.
+     * Dùng khi ĐĂNG NHẬP (nhận password thường từ form): Model sẽ tự hash
+     * password input và so sánh với passwordHash đã lưu.
      */
     public boolean checkPasswordRaw(String plainPassword) {
         if (this.passwordHash == null) {
@@ -123,8 +125,8 @@ public class User {
     }
 
     /**
-     * Nếu bạn đã hash sẵn ở ngoài (vd: ở service),
-     * có thể truyền mã hash vào đây để so sánh trực tiếp.
+     * Nếu bạn đã hash sẵn ở ngoài (vd: ở service), có thể truyền mã hash vào
+     * đây để so sánh trực tiếp.
      */
     public boolean checkPasswordHash(String inputHash) {
         if (this.passwordHash == null || inputHash == null) {
@@ -216,17 +218,16 @@ public class User {
     // ==========================
     // toString
     // ==========================
-
     @Override
     public String toString() {
-        return "User{" +
-                "userId=" + userId +
-                ", username='" + username + '\'' +
-                ", fullName='" + fullName + '\'' +
-                ", email='" + email + '\'' +
-                ", phone='" + phone + '\'' +
-                ", roleId=" + roleId +
-                ", isActive=" + isActive +
-                '}';
+        return "User{"
+                + "userId=" + userId
+                + ", username='" + username + '\''
+                + ", fullName='" + fullName + '\''
+                + ", email='" + email + '\''
+                + ", phone='" + phone + '\''
+                + ", roleId=" + roleId
+                + ", isActive=" + isActive
+                + '}';
     }
 }

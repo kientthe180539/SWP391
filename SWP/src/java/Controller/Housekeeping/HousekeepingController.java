@@ -282,16 +282,16 @@ public class HousekeepingController extends HttpServlet {
             if (ok) {
                 request.setAttribute("type", "success");
                 request.setAttribute("mess", "Cập nhật task thành công");
-                request.setAttribute("href", "/housekeeping/tasks");
+                request.setAttribute("href", "tasks");
             } else {
                 request.setAttribute("type", "error");
                 request.setAttribute("mess", "Cập nhật task thất bại");
-                request.setAttribute("href", "/housekeeping/task-detail?id=" + taskId);
+                request.setAttribute("href", "task-detail?id=" + taskId);
             }
         } catch (IllegalArgumentException ex) {
             request.setAttribute("type", "error");
             request.setAttribute("mess", "Trạng thái không hợp lệ");
-            request.setAttribute("href", "/housekeeping/task-detail?id=" + idStr);
+            request.setAttribute("href", "task-detail?id=" + idStr);
         }
 
         request.getRequestDispatcher("/Views/Housekeeping/TaskDetail.jsp")
@@ -417,11 +417,11 @@ public class HousekeepingController extends HttpServlet {
             if (ok) {
                 request.setAttribute("type", "success");
                 request.setAttribute("mess", "Cập nhật trạng thái phòng thành công");
-                request.setAttribute("href", "housekeeping/dashboard");
+                request.setAttribute("href", "dashboard");
             } else {
                 request.setAttribute("type", "error");
                 request.setAttribute("mess", "Cập nhật trạng thái phòng thất bại");
-                request.setAttribute("href", "housekeeping/room-update?roomId=" + roomId);
+                request.setAttribute("href", "room-update?roomId=" + roomId);
             }
 
             request.getRequestDispatcher("/Views/Housekeeping/RoomStateUpdate.jsp")

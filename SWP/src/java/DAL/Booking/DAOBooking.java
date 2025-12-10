@@ -21,7 +21,7 @@ public class DAOBooking extends DAO {
     // ======================================================
     public boolean createBooking(Booking booking) {
         String sql = "INSERT INTO bookings (customer_id, room_id, checkin_date, checkout_date, num_guests, status, total_amount, created_by, created_at) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, booking.getCustomerId());
@@ -68,11 +68,42 @@ public class DAOBooking extends DAO {
     // ======================================================
     public List<Booking> getAllBookings() {
         List<Booking> list = new ArrayList<>();
-        String sql = "SELECT * FROM bookings ORDER BY created_at DESC";
+        String sql = "SELECT b.*, c.full_name as customer_name, c.email as customer_email, " +
+                "r.room_number, rt.type_name " +
+                "FROM bookings b " +
+                "JOIN users c ON b.customer_id = c.user_id " +
+                "JOIN rooms r ON b.room_id = r.room_id " +
+                "JOIN room_types rt ON r.room_type_id = rt.room_type_id " +
+                "ORDER BY b.created_at DESC";
         try (PreparedStatement ps = connection.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                list.add(mapBooking(rs));
+                list.add(mapBookingWithDetails(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // ======================================================
+    // Get Bookings by Status
+    // ======================================================
+    public List<Booking> getBookingsByStatus(Status status) {
+        List<Booking> list = new ArrayList<>();
+        String sql = "SELECT b.*, c.full_name as customer_name, c.email as customer_email, " +
+                "r.room_number, rt.type_name " +
+                "FROM bookings b " +
+                "JOIN users c ON b.customer_id = c.user_id " +
+                "JOIN rooms r ON b.room_id = r.room_id " +
+                "JOIN room_types rt ON r.room_type_id = rt.room_type_id " +
+                "WHERE b.status = ? ORDER BY b.created_at DESC";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapBookingWithDetails(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -153,7 +184,8 @@ public class DAOBooking extends DAO {
     // ======================================================
     // Check-Out Transaction
     // Booking: CHECKED_OUT -> Room: DIRTY
-    // Optional: Create Cleaning Task? (Not implemented here to keep it simple, can be done in Controller)
+    // Optional: Create Cleaning Task? (Not implemented here to keep it simple, can
+    // be done in Controller)
     // ======================================================
     public boolean checkOut(int bookingId) {
         String getBookingSql = "SELECT room_id FROM bookings WHERE booking_id = ?";
@@ -206,6 +238,42 @@ public class DAOBooking extends DAO {
         return false;
     }
 
+    // ======================================================
+    // Get Current Booking (CHECKED_IN) for a Room
+    // ======================================================
+    public Booking getCurrentBookingByRoomId(int roomId) {
+        String sql = "SELECT * FROM bookings WHERE room_id = ? AND status = 'CHECKED_IN'";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapBooking(rs);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // ======================================================
+    // Get Last Booking (CHECKED_OUT) for a Room
+    // ======================================================
+    public Booking getLastBookingByRoomId(int roomId) {
+        String sql = "SELECT * FROM bookings WHERE room_id = ? AND status = 'CHECKED_OUT' ORDER BY checkout_date DESC LIMIT 1";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapBooking(rs);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     private Booking mapBooking(ResultSet rs) throws SQLException {
         Booking b = new Booking();
         b.setBookingId(rs.getInt("booking_id"));
@@ -214,22 +282,47 @@ public class DAOBooking extends DAO {
         b.setCheckinDate(rs.getDate("checkin_date").toLocalDate());
         b.setCheckoutDate(rs.getDate("checkout_date").toLocalDate());
         b.setNumGuests(rs.getInt("num_guests"));
-        
+
         try {
             b.setStatus(Status.valueOf(rs.getString("status")));
         } catch (Exception e) {
             b.setStatus(Status.PENDING);
         }
-        
+
         b.setTotalAmount(rs.getBigDecimal("total_amount"));
         b.setCreatedBy(rs.getInt("created_by"));
-        
+
         Timestamp cAt = rs.getTimestamp("created_at");
-        if (cAt != null) b.setCreatedAt(cAt.toLocalDateTime());
-        
+        if (cAt != null)
+            b.setCreatedAt(cAt.toLocalDateTime());
+
         Timestamp uAt = rs.getTimestamp("updated_at");
-        if (uAt != null) b.setUpdatedAt(uAt.toLocalDateTime());
-        
+        if (uAt != null)
+            b.setUpdatedAt(uAt.toLocalDateTime());
+
+        return b;
+    }
+
+    private Booking mapBookingWithDetails(ResultSet rs) throws SQLException {
+        Booking b = mapBooking(rs);
+
+        // Map customer details
+        Model.User customer = new Model.User();
+        customer.setUserId(b.getCustomerId());
+        customer.setFullName(rs.getString("customer_name"));
+        customer.setEmail(rs.getString("customer_email"));
+        b.setCustomer(customer);
+
+        // Map room details
+        Room room = new Room();
+        room.setRoomId(b.getRoomId());
+        room.setRoomNumber(rs.getString("room_number"));
+
+        Model.RoomType roomType = new Model.RoomType();
+        roomType.setTypeName(rs.getString("type_name"));
+        room.setRoomType(roomType);
+        b.setRoom(room);
+
         return b;
     }
 }

@@ -32,11 +32,7 @@
                                 <h2 class="mb-1">Dashboard</h2>
                                 <p class="text-muted mb-0">Overview of today's activities.</p>
                             </div>
-                            <div class="d-flex gap-2">
-                                <a href="<c:url value='/housekeeping/create-task'/>" class="btn btn-primary">
-                                    <i class="bi bi-plus-lg me-1"></i> New Task
-                                </a>
-                            </div>
+                           
                         </div>
 
                         <!-- KPI Cards -->

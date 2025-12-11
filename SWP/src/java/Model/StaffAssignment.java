@@ -23,6 +23,7 @@ public class StaffAssignment {
 
     private Integer assignmentId;
     private Integer employeeId;
+    private String employeeName; // Transient field for display
     private LocalDate workDate;
     private ShiftType shiftType;
     private StaffStatus status;
@@ -32,11 +33,11 @@ public class StaffAssignment {
     }
 
     public StaffAssignment(Integer assignmentId,
-                           Integer employeeId,
-                           LocalDate workDate,
-                           ShiftType shiftType,
-                           StaffStatus status,
-                           LocalDateTime createdAt) {
+            Integer employeeId,
+            LocalDate workDate,
+            ShiftType shiftType,
+            StaffStatus status,
+            LocalDateTime createdAt) {
 
         setAssignmentId(assignmentId);
         setEmployeeId(employeeId);
@@ -63,6 +64,14 @@ public class StaffAssignment {
             throw new IllegalArgumentException("Employee id cannot be null");
         }
         this.employeeId = employeeId;
+    }
+
+    public String getEmployeeName() {
+        return employeeName;
+    }
+
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
     }
 
     public LocalDate getWorkDate() {

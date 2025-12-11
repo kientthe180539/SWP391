@@ -50,13 +50,7 @@
                                         <span>My Tasks</span>
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="<c:url value='/housekeeping/create-task'/>"
-                                        class="nav-link ${pageContext.request.servletPath.endsWith('CreateTask.jsp') ? 'active' : ''}">
-                                        <i class="bi bi-plus-square"></i>
-                                        <span>Create Task</span>
-                                    </a>
-                                </li>
+                               
                                 <li class="nav-item">
                                     <a href="<c:url value='/housekeeping/issue-report'/>"
                                         class="nav-link ${pageContext.request.servletPath.endsWith('IssueReport.jsp') ? 'active' : ''}">

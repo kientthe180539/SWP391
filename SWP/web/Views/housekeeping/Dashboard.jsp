@@ -32,7 +32,7 @@
                                 <h2 class="mb-1">Dashboard</h2>
                                 <p class="text-muted mb-0">Overview of today's activities.</p>
                             </div>
-                           
+
                         </div>
 
                         <!-- KPI Cards -->

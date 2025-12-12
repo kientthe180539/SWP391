@@ -1,5 +1,6 @@
-package DAL;
+package DAL.ReplenishmentRequest;
 
+import DAL.DAO;
 import Model.Amenity;
 import Model.ReplenishmentRequest;
 import Model.User;

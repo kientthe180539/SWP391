@@ -1,5 +1,6 @@
-package DAL;
+package DAL.Amenity;
 
+import DAL.DAO;
 import Model.Amenity;
 import Model.RoomTypeAmenity;
 import java.sql.PreparedStatement;

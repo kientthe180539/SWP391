@@ -1,5 +1,6 @@
-package DAL;
+package DAL.RoomInspection;
 
+import DAL.DAO;
 import Model.Amenity;
 import Model.InspectionDetail;
 import Model.RoomInspection;

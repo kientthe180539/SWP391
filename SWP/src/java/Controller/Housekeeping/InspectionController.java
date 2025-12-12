@@ -1,9 +1,9 @@
 package Controller.Housekeeping;
 
-import DAL.AmenityDAO;
+import DAL.Amenity.AmenityDAO;
 import DAL.Housekeeping.DAOHousekeeping;
-import DAL.RoomInspectionDAO;
-import Model.Amenity;
+import DAL.ReplenishmentRequest.ReplenishmentRequestDAO;
+import DAL.RoomInspection.RoomInspectionDAO;
 import Model.InspectionDetail;
 import Model.Room;
 import Model.RoomInspection;
@@ -254,7 +254,7 @@ public class InspectionController extends HttpServlet {
             replenishmentRequest.setRequestedBy(requester.getUserId());
             replenishmentRequest.setStatus(Model.ReplenishmentRequest.Status.PENDING);
 
-            DAL.ReplenishmentRequestDAO replenishmentDAO = new DAL.ReplenishmentRequestDAO();
+            ReplenishmentRequestDAO replenishmentDAO = new ReplenishmentRequestDAO();
             boolean success = replenishmentDAO.createRequest(replenishmentRequest);
 
             if (success) {

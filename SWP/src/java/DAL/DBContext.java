@@ -16,7 +16,7 @@ public class DBContext {
         try {
             // Thay đổi 1: Cập nhật thông tin đăng nhập (ví dụ)
             String user = "root"; // Tên người dùng MySQL của bạn
-            String pass = "123456"; // Mật khẩu MySQL của bạn
+            String pass = "yourpassword"; // Mật khẩu MySQL của bạn
 
             // Thay đổi 2: Cập nhật URL kết nối cho MySQL
             // Ví dụ: kết nối đến database 'my_database' trên localhost, cổng 3306

@@ -1,1 +1,8 @@
-/SWP/nbproject/
+/SWP/nbproject/private
+/SWP/build/
+/SWP/dist/
+*.class
+*.war
+/SWP/out/
+/SWP/.idea/
+/SWP/.smarttomcat/

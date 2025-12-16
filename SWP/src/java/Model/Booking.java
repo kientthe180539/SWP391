@@ -27,20 +27,24 @@ public class Booking {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // Optional: for displaying related data
+    private User customer;
+    private Room room;
+
     public Booking() {
     }
 
     public Booking(Integer bookingId,
-                   Integer customerId,
-                   Integer roomId,
-                   LocalDate checkinDate,
-                   LocalDate checkoutDate,
-                   Integer numGuests,
-                   Status status,
-                   BigDecimal totalAmount,
-                   Integer createdBy,
-                   LocalDateTime createdAt,
-                   LocalDateTime updatedAt) {
+            Integer customerId,
+            Integer roomId,
+            LocalDate checkinDate,
+            LocalDate checkoutDate,
+            Integer numGuests,
+            Status status,
+            BigDecimal totalAmount,
+            Integer createdBy,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
 
         setBookingId(bookingId);
         setCustomerId(customerId);
@@ -175,6 +179,22 @@ public class Booking {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public User getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(User customer) {
+        this.customer = customer;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public void setRoom(Room room) {
+        this.room = room;
     }
 
     @Override

@@ -12,7 +12,7 @@ public class StaffAssignment {
     public enum ShiftType {
         MORNING,
         AFTERNOON,
-        NIGHT
+        EVENING
     }
 
     public enum StaffStatus {

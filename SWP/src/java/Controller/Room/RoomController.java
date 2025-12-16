@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import Model.Room;
 
-@WebServlet(name = "RoomController", urlPatterns = {"/rooms", "/room-detail"})
+@WebServlet(name = "RoomController", urlPatterns = { "/rooms", "/room-detail" })
 public class RoomController extends HttpServlet {
 
     private static final int PAGE_SIZE = 6;
@@ -78,10 +78,25 @@ public class RoomController extends HttpServlet {
             }
         }
 
-        List<Map.Entry<Room, RoomType>> rooms = DAOGuest.INSTANCE.getAvailableRooms(
-                roomTypeId, minPrice, maxPrice, page, PAGE_SIZE);
+        java.time.LocalDate checkIn = null;
+        java.time.LocalDate checkOut = null;
+        try {
+            String checkInParam = request.getParameter("checkIn");
+            String checkOutParam = request.getParameter("checkOut");
+            if (checkInParam != null && !checkInParam.isBlank()) {
+                checkIn = java.time.LocalDate.parse(checkInParam);
+            }
+            if (checkOutParam != null && !checkOutParam.isBlank()) {
+                checkOut = java.time.LocalDate.parse(checkOutParam);
+            }
+        } catch (Exception e) {
+            // Invalid date format, ignore
+        }
 
-        int totalCount = DAOGuest.INSTANCE.countAvailableRooms(roomTypeId);
+        List<Map.Entry<Room, RoomType>> rooms = DAOGuest.INSTANCE.getAvailableRooms(
+                roomTypeId, minPrice, maxPrice, checkIn, checkOut, page, PAGE_SIZE);
+
+        int totalCount = DAOGuest.INSTANCE.countAvailableRooms(roomTypeId, checkIn, checkOut);
         int totalPage = (int) Math.ceil((double) totalCount / PAGE_SIZE);
 
         List<RoomType> roomTypes = DAOGuest.INSTANCE.getAllRoomTypes();
@@ -92,6 +107,8 @@ public class RoomController extends HttpServlet {
         request.setAttribute("selectedType", roomTypeId);
         request.setAttribute("minPrice", minPrice);
         request.setAttribute("maxPrice", maxPrice);
+        request.setAttribute("checkIn", checkIn);
+        request.setAttribute("checkOut", checkOut);
         request.setAttribute("roomTypes", roomTypes);
 
         request.getRequestDispatcher("Views/Room/RoomList.jsp").forward(request, response);
@@ -120,6 +137,26 @@ public class RoomController extends HttpServlet {
 
             request.setAttribute("room", entry.getKey());
             request.setAttribute("roomType", entry.getValue());
+
+            // Fetch feedback
+            int feedbackPage = 1;
+            try {
+                String p = request.getParameter("page");
+                if (p != null)
+                    feedbackPage = Integer.parseInt(p);
+            } catch (NumberFormatException e) {
+            }
+
+            int feedbackPageSize = 5;
+            java.util.List<Model.Feedback> feedbacks = DAL.Feedback.DAOFeedback.INSTANCE.getFeedbacksByRoomId(roomId,
+                    feedbackPage, feedbackPageSize);
+            int totalFeedbacks = DAL.Feedback.DAOFeedback.INSTANCE.countFeedbacksByRoomId(roomId);
+            int totalFeedbackPage = (int) Math.ceil((double) totalFeedbacks / feedbackPageSize);
+
+            request.setAttribute("feedbacks", feedbacks);
+            request.setAttribute("feedbackPage", feedbackPage);
+            request.setAttribute("totalFeedbackPage", totalFeedbackPage);
+
             request.getRequestDispatcher("Views/Room/RoomDetail.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {

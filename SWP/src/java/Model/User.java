@@ -10,12 +10,8 @@ public class User {
     // Regex pattern
     // ==========================
     // Số điện thoại VN
-//    private static final Pattern PHONE_PATTERN = Pattern.compile(
-//            "^(?:\\+84|84|0)(3[2-9]|9(1-9)|8[1-5]|7(?:[6-9]|0))\\d{1}([-.]?)\\d{3}\\2\\d{3}$"
-//    );
-    //simple test
     private static final Pattern PHONE_PATTERN = Pattern.compile(
-            "^(\\+84|84|0)(\\d{9})$"
+            "^(?:\\+84|84|0)(3[2-9]|5[6-9]|7[0-9]|8[1-9]|9[0-9])\\d{7}$"
     );
 
     // Email

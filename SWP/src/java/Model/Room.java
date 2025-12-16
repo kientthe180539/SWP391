@@ -16,6 +16,7 @@ public class Room {
     private Integer roomTypeId;
     private Integer floor;
     private Status status;
+    private String roomTypeName;
     private String imageUrl;
     private String description;
     private Boolean isActive;
@@ -134,6 +135,26 @@ public class Room {
 
     public void setRoomType(RoomType roomType) {
         this.roomType = roomType;
+    }
+
+    public String getRoomTypeName() {
+        return roomTypeName;
+    }
+
+    public void setRoomTypeName(String roomTypeName) {
+        this.roomTypeName = roomTypeName;
+    }
+
+    public java.util.List<String> getImageList() {
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        return java.util.Arrays.asList(imageUrl.split(";"));
+    }
+
+    public String getFirstImage() {
+        java.util.List<String> list = getImageList();
+        return list.isEmpty() ? null : list.get(0);
     }
 
     @Override

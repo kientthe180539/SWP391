@@ -1,7 +1,7 @@
 <%@ page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<link rel="stylesheet" href="CSS/Components/footer.css" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/Components/footer.css" />
 
 <footer class="footer">
     <div class="footer-container">

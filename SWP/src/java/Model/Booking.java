@@ -10,6 +10,7 @@ public class Booking {
         PENDING,
         CONFIRMED,
         CANCELLED,
+        COMPLETED,
         CHECKED_IN,
         CHECKED_OUT,
         NO_SHOW

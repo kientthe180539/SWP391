@@ -1,76 +1,107 @@
 <%@ page contentType="text/html" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Create Account</title>
+    <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+        <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+            <!DOCTYPE html>
+            <html lang="en">
 
-        <link rel="stylesheet" href="CSS/Authen/register.css">
-    </head>
-    <body>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Create Account</title>
 
-        <!-- Include Header -->
-        <%@include file="../Components/Header.jsp" %>
+                <link rel="stylesheet" href="CSS/Authen/register.css">
+                <link rel="stylesheet"
+                    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+            </head>
 
-        <main class="auth-main">
-            <div class="auth-card">
-                <div class="auth-header">
-                    <div class="auth-logo">
-                        <h2>Create New Account</h2>
-                    </div>
-                    <p class="auth-subtitle">Join our professional hotel management system.</p>
-                </div>
+            <body>
 
-                <form action="register" method="POST" class="auth-form">
-                    <input type="hidden" name="action" value="register">
+                <!-- Include Header -->
+                <%@include file="../Components/Header.jsp" %>
 
-                    <div class="form-group">
-                        <label for="username">User Name</label>
-                        <input type="text" id="username" name="username" placeholder="VanA" value="${username}" required>
-                    </div>
+                    <main class="auth-main">
+                        <div class="auth-card">
+                            <div class="auth-header">
+                                <div class="auth-logo">
+                                    <h2>Create New Account</h2>
+                                </div>
+                                <p class="auth-subtitle">Join our professional hotel management system.</p>
+                            </div>
 
-                    <div class="form-group">
-                        <label for="fullName">Full Name</label>
-                        <input type="text" id="fullName" name="fullName" placeholder="Nguyễn Văn A" value="${fullName}" required>
-                    </div>
+                            <form action="register" method="POST" class="auth-form">
+                                <input type="hidden" name="action" value="register">
 
-                    <!-- Phone Number -->
-                    <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="text" id="phone" name="phone" placeholder="098 7654321" value="${phone}" required>
-                    </div>
+                                <div class="form-group">
+                                    <label for="username">User Name</label>
+                                    <input type="text" id="username" name="username" placeholder="VanA"
+                                        value="${username}" required>
+                                </div>
 
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" placeholder="user@gmail.com" value="${email}" required>
-                    </div>
+                                <div class="form-group">
+                                    <label for="fullName">Full Name</label>
+                                    <input type="text" id="fullName" name="fullName" placeholder="Nguyễn Văn A"
+                                        value="${fullName}" required>
+                                </div>
 
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" required>
-                    </div>
+                                <!-- Phone Number -->
+                                <div class="form-group">
+                                    <label for="phone">Phone Number</label>
+                                    <input type="text" id="phone" name="phone" placeholder="098 7654321"
+                                        value="${phone}" required>
+                                </div>
 
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm Password</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" required>
-                    </div>
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" id="email" name="email" placeholder="user@gmail.com"
+                                        value="${email}" required>
+                                </div>
 
-                    <div class="form-actions">
-                        <button type="submit" class="auth-button">Sign Up</button>
-                    </div>
-                </form>
+                                <div class="form-group" style="position: relative;">
+                                    <label for="password">Password</label>
+                                    <input type="password" id="password" name="password" required
+                                        style="padding-right: 40px;">
+                                    <i class="bi bi-eye" onclick="togglePasswordVisibility('password', this)"
+                                        style="position: absolute; right: 15px; top: 38px; cursor: pointer; color: #6b7280; font-size: 1.2rem;"></i>
+                                </div>
 
-                <div class="auth-footer-links">
-                    <p>Already have an account? <a href="login">Log in now</a></p>
-                </div>
-            </div>
-        </main>
+                                <div class="form-group" style="position: relative;">
+                                    <label for="confirmPassword">Confirm Password</label>
+                                    <input type="password" id="confirmPassword" name="confirmPassword" required
+                                        style="padding-right: 40px;">
+                                    <i class="bi bi-eye" onclick="togglePasswordVisibility('confirmPassword', this)"
+                                        style="position: absolute; right: 15px; top: 38px; cursor: pointer; color: #6b7280; font-size: 1.2rem;"></i>
+                                </div>
 
-        <!-- Include Footer -->
-        <%@include file="../Components/Footer.jsp" %>
-        <%@ include file="../public/notify.jsp" %>
-    </body>
-</html>
+                                <div class="form-actions">
+                                    <button type="submit" class="auth-button">Sign Up</button>
+                                </div>
+                            </form>
+
+                            <div class="auth-footer-links">
+                                <p>Already have an account? <a href="login">Log in now</a></p>
+                            </div>
+                        </div>
+                    </main>
+
+                    <!-- Include Footer -->
+                    <%@include file="../Components/Footer.jsp" %>
+                        <%@ include file="../public/notify.jsp" %>
+
+                            <script>
+                                function togglePasswordVisibility(inputId, icon) {
+                                    const input = document.getElementById(inputId);
+
+                                    if (input.type === "password") {
+                                        input.type = "text";
+                                        icon.classList.remove('bi-eye');
+                                        icon.classList.add('bi-eye-slash');
+                                    } else {
+                                        input.type = "password";
+                                        icon.classList.remove('bi-eye-slash');
+                                        icon.classList.add('bi-eye');
+                                    }
+                                }
+                            </script>
+            </body>
+
+            </html>

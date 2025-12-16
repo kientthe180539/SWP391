@@ -42,7 +42,7 @@ public class InspectionController extends HttpServlet {
         }
         // Allow Receptionist(2), Housekeeping(3), Owner(4), Admin(5)
         int role = currentUser.getRoleId();
-        if (role != 2 && role != 3 && role != 4 && role != 5) {
+        if (role != 2 && role != 3 && role != 4 && role != 5 && role != 6) {
             response.sendError(403, "Access Denied");
             return;
         }
@@ -86,7 +86,7 @@ public class InspectionController extends HttpServlet {
             throws ServletException, IOException {
         String roomIdStr = request.getParameter("roomId");
         String bookingIdStr = request.getParameter("bookingId");
-        String type = request.getParameter("type"); // CHECKIN, CHECKOUT, ROUTINE
+        String type = request.getParameter("type"); // CHECKIN, CHECKOUT, DAILY
 
         if (roomIdStr == null) {
             response.sendRedirect(request.getContextPath() + "/housekeeping/dashboard"); // Redirect if no room
@@ -103,7 +103,7 @@ public class InspectionController extends HttpServlet {
                 // For checkout or dirty rooms, we likely want the LAST booking that just
                 // checked out
                 booking = DAL.Booking.DAOBooking.INSTANCE.getLastBookingByRoomId(roomId);
-            } else if ("CHECKIN".equals(type) || "ROUTINE".equals(type) || "OCCUPIED".equals(room.getStatus())) {
+            } else if ("CHECKIN".equals(type) || "DAILY".equals(type) || "OCCUPIED".equals(room.getStatus())) {
                 // For checkin (pre-arrival/post-cleaning) or routine, we might want current
                 // booking
                 booking = DAL.Booking.DAOBooking.INSTANCE.getCurrentBookingByRoomId(roomId);

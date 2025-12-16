@@ -17,7 +17,9 @@ public class HousekeepingTask {
 
     public enum TaskType {
         CLEANING,
-        INSPECTION
+        INSPECTION,
+        CHECKIN,
+        CHECKOUT
     }
 
     private Integer taskId;
@@ -35,15 +37,15 @@ public class HousekeepingTask {
     }
 
     public HousekeepingTask(Integer taskId,
-                            Integer roomId,
-                            Integer assignedTo,
-                            LocalDate taskDate,
-                            TaskType taskType,
-                            TaskStatus status,
-                            String note,
-                            Integer createdBy,
-                            LocalDateTime createdAt,
-                            LocalDateTime updatedAt) {
+            Integer roomId,
+            Integer assignedTo,
+            LocalDate taskDate,
+            TaskType taskType,
+            TaskStatus status,
+            String note,
+            Integer createdBy,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
 
         setTaskId(taskId);
         setRoomId(roomId);

@@ -72,6 +72,19 @@
                                                 </div>
                                             </div>
 
+                                            <c:if
+                                                test="${task.taskType == 'INSPECTION' || task.taskType == 'CHECKIN' || task.taskType == 'CHECKOUT'}">
+                                                <div class="mb-4">
+                                                    <div class="d-grid">
+                                                        <a href="<c:url value='/housekeeping/inspection'><c:param name='roomId' value='${room.roomId}'/><c:param name='type' value='${task.taskType == "
+                                                            INSPECTION" ? "ROUTINE" : task.taskType}' /></c:url>"
+                                                        class="btn btn-outline-primary">
+                                                        <i class="bi bi-clipboard-check me-2"></i>Perform Inspection
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </c:if>
+
                                             <div class="mb-4">
                                                 <label class="form-label">Update Status</label>
                                                 <select name="status" class="form-select form-select-lg">

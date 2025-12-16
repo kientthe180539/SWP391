@@ -86,7 +86,13 @@ public class RoomInspectionDAO extends DAO {
 
     public List<RoomInspection> getRecentInspections(int limit) {
         List<RoomInspection> list = new ArrayList<>();
-        String sql = "SELECT * FROM room_inspections ORDER BY inspection_date DESC LIMIT ?";
+        String sql = "SELECT ri.*, r.room_number, u.full_name, c.full_name AS customer_name " +
+                "FROM room_inspections ri " +
+                "LEFT JOIN rooms r ON ri.room_id = r.room_id " +
+                "LEFT JOIN users u ON ri.inspector_id = u.user_id " +
+                "LEFT JOIN bookings b ON ri.booking_id = b.booking_id " +
+                "LEFT JOIN users c ON b.customer_id = c.user_id " +
+                "ORDER BY ri.inspection_date DESC LIMIT ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, limit);
             try (ResultSet rs = ps.executeQuery()) {
@@ -101,7 +107,13 @@ public class RoomInspectionDAO extends DAO {
     }
 
     public RoomInspection getInspectionById(int id) {
-        String sql = "SELECT * FROM room_inspections WHERE inspection_id = ?";
+        String sql = "SELECT ri.*, r.room_number, u.full_name, c.full_name AS customer_name " +
+                "FROM room_inspections ri " +
+                "LEFT JOIN rooms r ON ri.room_id = r.room_id " +
+                "LEFT JOIN users u ON ri.inspector_id = u.user_id " +
+                "LEFT JOIN bookings b ON ri.booking_id = b.booking_id " +
+                "LEFT JOIN users c ON b.customer_id = c.user_id " +
+                "WHERE ri.inspection_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -166,6 +178,22 @@ public class RoomInspectionDAO extends DAO {
         }
         ri.setType(rs.getString("type"));
         ri.setNote(rs.getString("note"));
+
+        try {
+            ri.setRoomNumber(rs.getString("room_number"));
+        } catch (SQLException e) {
+            /* Column might not exist in all queries */ }
+
+        try {
+            ri.setInspectorName(rs.getString("full_name"));
+        } catch (SQLException e) {
+            /* Column might not exist in all queries */ }
+
+        try {
+            ri.setCustomerName(rs.getString("customer_name"));
+        } catch (SQLException e) {
+            /* Column might not exist in all queries */ }
+
         return ri;
     }
 

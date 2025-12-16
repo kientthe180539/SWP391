@@ -48,13 +48,23 @@
                                         <div class="col-md-2">
                                             <select name="roleId" class="form-select form-select-sm">
                                                 <option value="">All Roles</option>
+                                                <option value="6" ${roleId=='6' ? 'selected' : '' }>Manager
+                                                </option>
                                                 <option value="2" ${roleId=='2' ? 'selected' : '' }>Receptionist
                                                 </option>
                                                 <option value="3" ${roleId=='3' ? 'selected' : '' }>Housekeeping
                                                 </option>
                                             </select>
                                         </div>
-
+                                        <div class="col-md-2">
+                                            <select name="status" class="form-select form-select-sm">
+                                                <option value="">All Status</option>
+                                                <option value="true" ${status=='true' ? 'selected' : '' }>Active
+                                                </option>
+                                                <option value="false" ${status=='false' ? 'selected' : '' }>Inactive
+                                                </option>
+                                            </select>
+                                        </div>
                                         <div class="col-md-2">
                                             <select name="sortBy" class="form-select form-select-sm">
                                                 <option value="user_id" ${sortBy=='user_id' ? 'selected' : '' }>Sort by
@@ -80,6 +90,7 @@
                                                 <th>Name</th>
                                                 <th>Role</th>
                                                 <th>Contact</th>
+                                                <th>Status</th>
                                                 <th class="text-end pe-4">Actions</th>
                                             </tr>
                                         </thead>
@@ -110,8 +121,9 @@
                                                     </td>
                                                     <td>
                                                         <span class="badge bg-light text-dark border">
-                                                            ${e.roleId == 2 ? 'Receptionist' : (e.roleId == 3 ?
-                                                            'Housekeeping' : 'Other')}
+                                                            ${e.roleId == 6 ? 'Manager' : (e.roleId == 2 ?
+                                                            'Receptionist' : (e.roleId == 3 ?
+                                                            'Housekeeping' : 'Other'))}
                                                         </span>
                                                     </td>
                                                     <td>
@@ -120,13 +132,28 @@
                                                         <div class="small"><i class="bi bi-phone me-1"></i> ${e.phone}
                                                         </div>
                                                     </td>
-                                                    
+                                                    <td>
+                                                        <span class="badge ${e.active ? 'bg-success' : 'bg-danger'}">
+                                                            ${e.active ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </td>
                                                     <td class="text-end pe-4">
                                                         <a href="<c:url value='/owner/employee-detail'><c:param name='id' value='${e.userId}'/></c:url>"
                                                             class="btn btn-sm btn-outline-secondary me-1">
                                                             Edit
                                                         </a>
-                                                        
+                                                        <form action="<c:url value='/owner/employees'/>" method="post"
+                                                            class="d-inline" id="toggleForm_${e.userId}">
+                                                            <input type="hidden" name="action" value="toggleStatus">
+                                                            <input type="hidden" name="userId" value="${e.userId}">
+                                                            <input type="hidden" name="currentStatus"
+                                                                value="${e.active}">
+                                                            <button type="button"
+                                                                class="btn btn-sm ${e.active ? 'btn-outline-danger' : 'btn-outline-success'}"
+                                                                onclick="confirmToggle('${e.userId}', ${e.active}, '${e.fullName}')">
+                                                                ${e.active ? 'Lock' : 'Unlock'}
+                                                            </button>
+                                                        </form>
                                                     </td>
                                                 </tr>
                                             </c:forEach>
@@ -141,17 +168,17 @@
                                     <ul class="pagination pagination-sm mb-0">
                                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
                                             <a class="page-link"
-                                                href="?page=${currentPage - 1}&search=${search}&roleId=${roleId}&sortBy=${sortBy}">Previous</a>
+                                                href="?page=${currentPage - 1}&search=${search}&roleId=${roleId}&status=${status}&sortBy=${sortBy}">Previous</a>
                                         </li>
                                         <c:forEach begin="1" end="${totalPages}" var="p">
                                             <li class="page-item ${currentPage == p ? 'active' : ''}">
                                                 <a class="page-link"
-                                                    href="?page=${p}&search=${search}&roleId=${roleId}&sortBy=${sortBy}">${p}</a>
+                                                    href="?page=${p}&search=${search}&roleId=${roleId}&status=${status}&sortBy=${sortBy}">${p}</a>
                                             </li>
                                         </c:forEach>
                                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
                                             <a class="page-link"
-                                                href="?page=${currentPage + 1}&search=${search}&roleId=${roleId}&sortBy=${sortBy}">Next</a>
+                                                href="?page=${currentPage + 1}&search=${search}&roleId=${roleId}&status=${status}&sortBy=${sortBy}">Next</a>
                                         </li>
                                     </ul>
                                 </nav>
@@ -163,7 +190,52 @@
                 </div>
             </div>
 
+            <!-- Scripts -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script>
+                // Check if there's a notification from session
+                <%
+                    String notification = (String) session.getAttribute("notification");
+                if (notification != null && !notification.isEmpty()) {
+                    String[] parts = notification.split("\\|");
+                        String type = parts[0];
+                        String msg = parts.length > 1 ? parts[1] : "";
+                %>
+                        Swal.fire({
+                            icon: '<%= type %>',
+                            title: '<%= type.substring(0, 1).toUpperCase() + type.substring(1) %>',
+                            text: '<%= msg %>',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                <%
+                        session.removeAttribute("notification");
+                }
+                %>
+
+                    function confirmToggle(userId, isActive, name) {
+                        const action = isActive ? 'lock' : 'unlock';
+                        const title = isActive ? 'Lock Account?' : 'Unlock Account?';
+                        const text = "Are you sure you want to " + action + " employee " + name + "?";
+                        const confirmBtnText = isActive ? 'Yes, lock it!' : 'Yes, unlock it!';
+                        const confirmBtnColor = isActive ? '#d33' : '#3085d6';
+
+                        Swal.fire({
+                            title: title,
+                            text: text,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: confirmBtnColor,
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: confirmBtnText
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                document.getElementById('toggleForm_' + userId).submit();
+                            }
+                        });
+                    }
+            </script>
         </body>
 
         </html>

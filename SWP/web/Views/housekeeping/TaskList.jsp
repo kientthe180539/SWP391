@@ -25,20 +25,35 @@
                     <div class="container-fluid py-4 px-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
-                                <h2 class="mb-1">My Tasks</h2>
-                                <p class="text-muted mb-0">Manage your cleaning assignments.</p>
+                                <h2 class="mb-1">
+                                    <c:choose>
+                                        <c:when test="${param.type == 'CLEANING'}">Cleaning Tasks</c:when>
+                                        <c:when test="${param.type == 'INSPECTION'}">Inspection Tasks</c:when>
+                                        <c:otherwise>My Tasks</c:otherwise>
+                                    </c:choose>
+                                </h2>
+                                <p class="text-muted mb-0">
+                                    <c:choose>
+                                        <c:when test="${param.type == 'CLEANING'}">Manage your daily cleaning
+                                            assignments.</c:when>
+                                        <c:when test="${param.type == 'INSPECTION'}">Perform room inspections and
+                                            checks.</c:when>
+                                        <c:otherwise>Manage all your assignments.</c:otherwise>
+                                    </c:choose>
+                                </p>
                             </div>
                         </div>
 
                         <div class="card shadow-sm">
                             <div class="card-header bg-white py-3">
                                 <form action="<c:url value='/housekeeping/tasks'/>" method="get">
+                                    <input type="hidden" name="type" value="${param.type}">
                                     <div class="row g-3">
                                         <div class="col-md-3">
-                                            <div class="input-group input-group-sm">
+                                            <div class="input-group input-group-sm ">
                                                 <span class="input-group-text bg-light border-end-0"><i
                                                         class="bi bi-search"></i></span>
-                                                <input type="text" name="search" class="form-control border-start-0"
+                                                <input type="text" name="search" class="form-control border-start-0 p-2"
                                                     placeholder="Search note, room..." value="${search}">
                                             </div>
                                         </div>
@@ -69,7 +84,7 @@
                                                     Status</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-1">
+                                        <div class="col-md-1 g-2 mt-3">
                                             <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
                                         </div>
                                     </div>
@@ -103,11 +118,24 @@
                                                     <td class="ps-4 text-muted">${(currentPage - 1) * 10 + st.index + 1}
                                                     </td>
                                                     <td>
-                                                        <span class="fw-bold text-primary">#${t.roomId}</span>
+                                                        <span class="fw-bold"> ${hkp.getRoomById(t.roomId).getRoomNumber()}</span>
                                                     </td>
                                                     <td>${t.taskDate}</td>
-                                                    <td><span
-                                                            class="badge bg-light text-dark border">${t.taskType}</span>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${t.taskType == 'CHECKIN'}">
+                                                                <span class="badge bg-success">Check-in</span>
+                                                            </c:when>
+                                                            <c:when test="${t.taskType == 'CHECKOUT'}">
+                                                                <span class="badge bg-primary">Check-out</span>
+                                                            </c:when>
+                                                            <c:when test="${t.taskType == 'INSPECTION'}">
+                                                                <span class="badge bg-info text-dark">Inspection</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="badge bg-secondary">Cleaning</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </td>
                                                     <td>
                                                         <span
@@ -135,17 +163,17 @@
                                     <ul class="pagination pagination-sm mb-0">
                                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
                                             <a class="page-link"
-                                                href="?page=${currentPage - 1}&search=${search}&status=${status}&dateFrom=${dateFrom}&dateTo=${dateTo}&sortBy=${sortBy}">Previous</a>
+                                                href="?page=${currentPage - 1}&search=${search}&status=${status}&dateFrom=${dateFrom}&dateTo=${dateTo}&sortBy=${sortBy}&type=${param.type}">Previous</a>
                                         </li>
                                         <c:forEach begin="1" end="${totalPages}" var="p">
                                             <li class="page-item ${currentPage == p ? 'active' : ''}">
                                                 <a class="page-link"
-                                                    href="?page=${p}&search=${search}&status=${status}&dateFrom=${dateFrom}&dateTo=${dateTo}&sortBy=${sortBy}">${p}</a>
+                                                    href="?page=${p}&search=${search}&status=${status}&dateFrom=${dateFrom}&dateTo=${dateTo}&sortBy=${sortBy}&type=${param.type}">${p}</a>
                                             </li>
                                         </c:forEach>
                                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
                                             <a class="page-link"
-                                                href="?page=${currentPage + 1}&search=${search}&status=${status}&dateFrom=${dateFrom}&dateTo=${dateTo}&sortBy=${sortBy}">Next</a>
+                                                href="?page=${currentPage + 1}&search=${search}&status=${status}&dateFrom=${dateFrom}&dateTo=${dateTo}&sortBy=${sortBy}&type=${param.type}">Next</a>
                                         </li>
                                     </ul>
                                 </nav>

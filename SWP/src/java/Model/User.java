@@ -40,7 +40,7 @@ public class User {
     public User() {
     }
 
-    // Constructor này không bắt buộc truyền password (tùy bạn muốn dùng hay không)
+    // Constructor này không bắt buộc truyền password (tùy muốn hay không)
     public User(Integer userId,
             String username,
             String fullName,
@@ -125,7 +125,7 @@ public class User {
     }
 
     /**
-     * Nếu bạn đã hash sẵn ở ngoài (vd: ở service), có thể truyền mã hash vào
+     * Nếu đã hash sẵn ở ngoài (vd: ở service), có thể truyền mã hash vào
      * đây để so sánh trực tiếp.
      */
     public boolean checkPasswordHash(String inputHash) {

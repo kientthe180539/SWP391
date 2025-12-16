@@ -8,13 +8,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.logging.Logger;
-import java.util.logging.Level;
+
 
 @WebServlet(name = "AuthenController", urlPatterns = {"/login", "/register", "/forgotPassword", "/resetPassword"})
 public class AuthenController extends HttpServlet {
-
-    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(AuthenController.class.getName());
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -40,9 +37,8 @@ public class AuthenController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String path = request.getServletPath();
         String action = request.getParameter("action");
-        System.out.println("Path: " + path);
+
         if (action == null) {
             request.setAttribute("type", "error");
             request.setAttribute("mess", "non-action require!");
@@ -77,7 +73,7 @@ public class AuthenController extends HttpServlet {
             request.setAttribute("fullName", fullName);
             request.setAttribute("email", email);
             request.setAttribute("phone", phone);
-            System.out.println("username: " + username);
+
             if (username == null || username.isBlank() || fullName == null || fullName.isBlank()
                     || email == null || email.isBlank() || phone == null || phone.isBlank()
                     || confirmPassword == null || confirmPassword.isBlank() || password == null || password.isBlank()) {

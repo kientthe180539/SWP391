@@ -18,6 +18,7 @@ public class SendEmail {
         // Email account credentials
         final String username = "kienga445@gmail.com";
         final String password = "yyil ebfq urtu kxpa";
+
 //        final String username = "lixinhtrai15012004@gmail.com";
 //        final String password = "rksw shzt gjpe wbeo";
 

@@ -149,8 +149,7 @@
                                                         ${booking.status}
                                                     </span>
                                                 </td>
-                                                <td><small>${fn:replace(fn:substring(booking.createdAt, 0, 16), 'T', '
-                                                        ')}</small></td>
+                                                <td><small>${fn:replace(fn:substring(booking.createdAt, 0, 16), 'T', ' ')}</small></td>
                                             </tr>
                                         </c:forEach>
                                     </tbody>

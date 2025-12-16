@@ -3,3 +3,6 @@
 /SWP/dist/
 *.class
 *.war
+/SWP/out/
+/SWP/.idea/
+/SWP/.smarttomcat/

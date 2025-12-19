@@ -62,6 +62,8 @@
                                             <div class="mb-3">
                                                 <label class="form-label">Role</label>
                                                 <select name="roleId" class="form-select" required>
+                                                    <option value="6" ${employee.roleId==6 ? 'selected' : '' }>
+                                                        Manager</option>
                                                     <option value="2" ${employee.roleId==2 ? 'selected' : '' }>
                                                         Receptionist</option>
                                                     <option value="3" ${employee.roleId==3 ? 'selected' : '' }>
@@ -96,6 +98,7 @@
             </div>
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+            <%@ include file="../public/notify.jsp" %>
         </body>
 
         </html>

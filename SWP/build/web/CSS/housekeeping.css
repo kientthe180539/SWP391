@@ -213,7 +213,7 @@ a {
 /* Sidebar */
 .sidebar {
     width: 260px;
-    background-color: var(--primary-color);
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
     color: #fff;
     flex-shrink: 0;
     display: flex;
@@ -252,16 +252,26 @@ a {
     align-items: center;
     padding: 0.75rem 1rem;
     color: #94a3b8;
-    border-radius: 8px;
     font-weight: 500;
     text-decoration: none;
     transition: all 0.2s ease;
+    border-left: 3px solid transparent;
 }
 
 .nav-link:hover,
 .nav-link.active {
-    background-color: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
     color: #fff;
+    border-left-color: var(--accent-color);
+}
+
+.nav-header {
+    padding: 1.25rem 1rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .nav-link i {

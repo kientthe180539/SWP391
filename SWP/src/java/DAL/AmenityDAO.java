@@ -136,4 +136,27 @@ public class AmenityDAO extends DAO {
         }
         return false;
     }
+
+    public boolean updateRoomTypeAmenity(int roomTypeAmenityId, int quantity) {
+        String sql = "UPDATE room_type_amenities SET default_quantity = ? WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, quantity);
+            ps.setInt(2, roomTypeAmenityId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean deleteRoomTypeAmenity(int roomTypeAmenityId) {
+        String sql = "DELETE FROM room_type_amenities WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomTypeAmenityId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

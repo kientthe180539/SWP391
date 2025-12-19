@@ -27,6 +27,7 @@ public class StaffAssignment {
     private LocalDate workDate;
     private ShiftType shiftType;
     private StaffStatus status;
+    private boolean isAccountActive; // Transient field for account status
     private LocalDateTime createdAt;
 
     public StaffAssignment() {
@@ -127,5 +128,13 @@ public class StaffAssignment {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isAccountActive() {
+        return isAccountActive;
+    }
+
+    public void setAccountActive(boolean accountActive) {
+        isAccountActive = accountActive;
     }
 }

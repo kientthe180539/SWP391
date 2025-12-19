@@ -26,64 +26,77 @@
                     <jsp:include page="../Shared/Header.jsp" />
 
                     <div class="container-fluid py-4 px-4">
-                        <!-- Dashboard Content -->
+                        <!-- Welcome Section -->
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
-                                <h2 class="mb-1">Dashboard</h2>
-                                <p class="text-muted mb-0">Overview of today's activities.</p>
+                                <h4 class="fw-bold mb-1">Hello, ${sessionScope.currentUser.fullName} 👋</h4>
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-calendar3 me-1"></i> Today's Shift:
+                                    <span class="fw-medium text-primary">
+                                        <c:choose>
+                                            <c:when test="${not empty todayAssignments}">
+                                                ${todayAssignments[0].shiftType}
+                                            </c:when>
+                                            <c:otherwise>Not Assigned</c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </p>
                             </div>
-                           
+                            <div class="d-flex gap-2">
+                                <span class="text-muted"><i class="bi bi-clock"></i> ${today}</span>
+                            </div>
                         </div>
 
-                        <!-- KPI Cards -->
+                        <!-- KPI Stats Row -->
                         <div class="row g-4 mb-4">
+                            <!-- Active Tasks -->
                             <div class="col-md-4">
-                                <div class="card h-100 border-start border-4 border-danger">
+                                <div class="card h-100 border-0 shadow-sm">
                                     <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <p class="text-muted small text-uppercase fw-bold mb-1">Rooms Dirty</p>
-                                                <h3 class="mb-0">${roomsNeedCleaning.size()}</h3>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div
+                                                class="flex-shrink-0 rounded-circle bg-primary bg-opacity-10 p-3 text-primary">
+                                                <i class="bi bi-list-task fs-4"></i>
                                             </div>
-                                            <div class="p-2 bg-danger bg-opacity-10 rounded-circle text-danger">
-                                                <i class="bi bi-bucket-fill fs-4"></i>
+                                            <div class="ms-3">
+                                                <h6 class="text-muted text-uppercase small fw-bold mb-1">Active Tasks
+                                                </h6>
+                                                <h2 class="mb-0 fw-bold">${pendingCount}</h2>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            <!-- Completed Tasks -->
                             <div class="col-md-4">
-                                <div class="card h-100 border-start border-4 border-primary">
+                                <div class="card h-100 border-0 shadow-sm">
                                     <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <p class="text-muted small text-uppercase fw-bold mb-1">My Tasks</p>
-                                                <h3 class="mb-0">${todayTasks.size()}</h3>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div
+                                                class="flex-shrink-0 rounded-circle bg-success bg-opacity-10 p-3 text-success">
+                                                <i class="bi bi-check-circle-fill fs-4"></i>
                                             </div>
-                                            <div class="p-2 bg-primary bg-opacity-10 rounded-circle text-primary">
-                                                <i class="bi bi-check2-square fs-4"></i>
+                                            <div class="ms-3">
+                                                <h6 class="text-muted text-uppercase small fw-bold mb-1">Completed</h6>
+                                                <h2 class="mb-0 fw-bold">${completedCount}</h2>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            <!-- Pending Requests -->
                             <div class="col-md-4">
-                                <div class="card h-100 border-start border-4 border-success">
+                                <div class="card h-100 border-0 shadow-sm">
                                     <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <p class="text-muted small text-uppercase fw-bold mb-1">Shift</p>
-                                                <h3 class="mb-0">
-                                                    <c:choose>
-                                                        <c:when test="${not empty todayAssignments}">
-                                                            ${todayAssignments[0].shiftType}
-                                                        </c:when>
-                                                        <c:otherwise>Off</c:otherwise>
-                                                    </c:choose>
-                                                </h3>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div
+                                                class="flex-shrink-0 rounded-circle bg-warning bg-opacity-10 p-3 text-warning">
+                                                <i class="bi bi-box-seam-fill fs-4"></i>
                                             </div>
-                                            <div class="p-2 bg-success bg-opacity-10 rounded-circle text-success">
-                                                <i class="bi bi-clock-history fs-4"></i>
+                                            <div class="ms-3">
+                                                <h6 class="text-muted text-uppercase small fw-bold mb-1">Pending
+                                                    Requests</h6>
+                                                <h2 class="mb-0 fw-bold">${requestCount}</h2>
                                             </div>
                                         </div>
                                     </div>
@@ -92,94 +105,118 @@
                         </div>
 
                         <div class="row g-4">
-                            <!-- Rooms Needing Attention -->
+                            <!-- Left Column: My Tasks -->
                             <div class="col-lg-8">
-                                <div class="card h-100">
-                                    <div class="card-header">
-                                        <span><i class="bi bi-house-exclamation me-2"></i>Rooms Needing Attention</span>
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div
+                                        class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold"><i class="bi bi-list-check me-2 text-primary"></i>My
+                                            Assigned Tasks</h6>
+                                        <a href="<c:url value='/housekeeping/tasks'/>"
+                                            class="btn btn-sm btn-light rounded-pill px-3">View All</a>
                                     </div>
                                     <div class="card-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover align-middle mb-0">
-                                                <thead class="bg-light">
-                                                    <tr>
-                                                        <th>Room</th>
-                                                        <th>Floor</th>
-                                                        <th>Status</th>
-                                                        <th class="text-end">Action</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <c:if test="${empty roomsNeedCleaning}">
-                                                        <tr>
-                                                            <td colspan="4" class="text-center py-4 text-muted">
-                                                                <i class="bi bi-stars fs-1 d-block mb-2"></i>
-                                                                All rooms are clean!
-                                                            </td>
-                                                        </tr>
-                                                    </c:if>
-                                                    <c:forEach items="${roomsNeedCleaning}" var="r">
-                                                        <tr>
-                                                            <td class="fw-bold text-primary">#${r.roomNumber}</td>
-                                                            <td>${r.floor}</td>
-                                                            <td>
+                                        <div class="list-group list-group-flush">
+                                            <c:if test="${empty todayTasks}">
+                                                <div class="text-center py-5 text-muted">
+                                                    <i class="bi bi-cup-hot display-6 mb-3 d-block text-secondary"></i>
+                                                    <p>You have no tasks assigned for today yet.</p>
+                                                </div>
+                                            </c:if>
+                                            <c:forEach items="${todayTasks}" var="t" end="4">
+                                                <div
+                                                    class="list-group-item p-3 border-start border-4 ${t.status == 'DONE' ? 'border-success' : (t.status == 'NEW' ? 'border-info' : 'border-warning')}">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <div class="d-flex align-items-center mb-1">
+                                                                <h6 class="mb-0 me-2 text-dark">Room
+                                                                    ${hkp.getRoomById(t.roomId).getRoomNumber()}</h6>
                                                                 <span
-                                                                    class="badge ${r.status == 'DIRTY' ? 'bg-status-dirty' : (r.status == 'CLEANING' ? 'bg-status-cleaning' : 'bg-secondary')}">
-                                                                    ${r.status}
-                                                                </span>
-                                                            </td>
-                                                            <td class="text-end">
-                                                                <a href="<c:url value='/housekeeping/room-update'><c:param name='roomId' value='${r.roomId}'/></c:url>"
-                                                                    class="btn btn-sm btn-outline-secondary">
-                                                                    Update
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    </c:forEach>
-                                                </tbody>
-                                            </table>
+                                                                    class="badge ${t.taskType == 'CLEANING' ? 'bg-secondary' : 'bg-primary'} bg-opacity-75 rounded-pill px-2"
+                                                                    style="font-size: 0.7rem;">${t.taskType}</span>
+                                                            </div>
+                                                            <p class="mb-1 text-muted small">${t.note}</p>
+                                                        </div>
+                                                        <div class="d-flex flex-column align-items-end gap-2">
+                                                            <span
+                                                                class="badge ${t.status == 'NEW' ? 'bg-info' : (t.status == 'DONE' ? 'bg-success' : 'bg-warning')} rounded-pill text-white">
+                                                                ${t.status}
+                                                            </span>
+                                                            <a href="<c:url value='/housekeeping/task-detail'><c:param name='id' value='${t.taskId}'/></c:url>"
+                                                                class="btn btn-sm btn-outline-primary py-0 px-2"
+                                                                style="font-size: 0.8rem;">
+                                                                View
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </c:forEach>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Today's Tasks -->
+                            <!-- Right Column: Quick Actions & Requests -->
                             <div class="col-lg-4">
-                                <div class="card h-100">
-                                    <div class="card-header">
-                                        <span><i class="bi bi-list-check me-2"></i>My Tasks</span>
+                                <!-- Quick Actions -->
+                                <div class="card border-0 shadow-sm mb-4">
+                                    <div class="card-header bg-white py-3">
+                                        <h6 class="mb-0 fw-bold"><i
+                                                class="bi bi-lightning-charge me-2 text-warning"></i>Quick Actions</h6>
                                     </div>
-                                    <div class="card-body p-0">
-                                        <div class="list-group list-group-flush">
-                                            <c:if test="${empty todayTasks}">
-                                                <div class="text-center py-4 text-muted">
-                                                    <i class="bi bi-cup-hot fs-1 d-block mb-2"></i>
-                                                    No tasks assigned.
-                                                </div>
-                                            </c:if>
-                                            <c:forEach items="${todayTasks}" var="t">
-                                                <a href="<c:url value='/housekeeping/task-detail'><c:param name='id' value='${t.taskId}'/></c:url>"
-                                                    class="list-group-item list-group-item-action p-3">
-                                                    <div
-                                                        class="d-flex w-100 justify-content-between align-items-center mb-1">
-                                                        <h6 class="mb-0 text-primary">Room ${t.roomId}</h6>
-                                                        <small class="text-muted">${t.taskType}</small>
-                                                    </div>
-                                                    <p class="mb-1 text-truncate text-muted small">${t.note}</p>
-                                                    <div class="mt-2">
-                                                        <span
-                                                            class="badge ${t.status == 'NEW' ? 'bg-info' : (t.status == 'DONE' ? 'bg-success' : 'bg-warning')}">
-                                                            ${t.status}
-                                                        </span>
-                                                    </div>
-                                                </a>
-                                            </c:forEach>
+                                    <div class="card-body">
+                                        <div class="d-grid gap-2">
+                                            <a href="<c:url value='/housekeeping/create-replenishment'/>"
+                                                class="btn btn-outline-primary d-flex align-items-center justify-content-between p-3">
+                                                <span>Request Supplies</span>
+                                                <i class="bi bi-arrow-right"></i>
+                                            </a>
+                                            <a href="<c:url value='/housekeeping/issue-report'/>"
+                                                class="btn btn-outline-danger d-flex align-items-center justify-content-between p-3">
+                                                <span>Report Issue</span>
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                            </a>
+                                            <a href="<c:url value='/housekeeping/schedule'/>"
+                                                class="btn btn-outline-secondary d-flex align-items-center justify-content-between p-3">
+                                                <span>My Schedule</span>
+                                                <i class="bi bi-calendar-event"></i>
+                                            </a>
                                         </div>
                                     </div>
-                                    <div class="card-footer bg-white text-center border-top-0 py-3">
-                                        <a href="<c:url value='/housekeeping/tasks'/>"
-                                            class="text-decoration-none fw-bold small">View All <i
-                                                class="bi bi-arrow-right"></i></a>
+                                </div>
+
+                                <!-- Recent Supply Requests -->
+                                <div class="card border-0 shadow-sm">
+                                    <div
+                                        class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold"><i
+                                                class="bi bi-clock-history me-2 text-info"></i>Recent Requests</h6>
+                                        <a href="<c:url value='/housekeeping/supplies'/>"
+                                            class="text-decoration-none small">View All</a>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <ul class="list-group list-group-flush">
+                                            <c:if test="${empty myRequests}">
+                                                <li class="list-group-item text-center text-muted small py-3">No recent
+                                                    requests.</li>
+                                            </c:if>
+                                            <c:forEach items="${myRequests}" var="req" end="4">
+                                                <li class="list-group-item px-3 py-2">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div class="text-truncate me-2">
+                                                            <div class="fw-medium small">${req.amenity.name}</div>
+                                                            <div class="text-muted" style="font-size: 0.75rem;">Qty:
+                                                                ${req.quantityRequested}</div>
+                                                        </div>
+                                                        <span
+                                                            class="badge ${req.status == 'PENDING' ? 'bg-warning' : (req.status == 'APPROVED' ? 'bg-success' : 'bg-danger')} rounded-pill"
+                                                            style="font-size: 0.7rem;">
+                                                            ${req.status}
+                                                        </span>
+                                                    </div>
+                                                </li>
+                                            </c:forEach>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>

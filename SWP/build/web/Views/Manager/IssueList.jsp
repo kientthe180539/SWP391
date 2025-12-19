@@ -39,8 +39,18 @@
                                             <c:forEach items="${issues}" var="i">
                                                 <tr>
                                                     <td>#${i.issueId}</td>
-                                                    <td>${i.roomId}</td>
-                                                    <td>${i.issueType}</td>
+                                                    <td>${i.roomNumber}</td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${i.issueType == 'CONFIRMATION'}">
+                                                                <span
+                                                                    class="badge text-bg-info text-white">CONFIRMATION</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                ${i.issueType}
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </td>
                                                     <td>${i.description}</td>
                                                     <td>
                                                         <span
@@ -66,6 +76,50 @@
                                             </c:forEach>
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+
+                            <!-- Pagination Info -->
+                            <div class="card-footer bg-white">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-muted">
+                                        Showing ${(currentPage - 1) * pageSize + 1} to ${(currentPage - 1) * pageSize +
+                                        issues.size()} of ${totalIssues} issues
+                                    </div>
+                                    <c:if test="${totalPages > 1}">
+                                        <nav>
+                                            <ul class="pagination mb-0">
+                                                <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                                    <a class="page-link" href="?page=${currentPage - 1}">
+                                                        <i class="bi bi-chevron-left"></i>
+                                                    </a>
+                                                </li>
+
+                                                <c:forEach begin="1" end="${totalPages}" var="i">
+                                                    <c:if
+                                                        test="${i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2)}">
+                                                        <li class="page-item ${currentPage == i ? 'active' : ''}">
+                                                            <a class="page-link" href="?page=${i}">${i}</a>
+                                                        </li>
+                                                    </c:if>
+                                                    <c:if test="${i == 2 && currentPage > 4}">
+                                                        <li class="page-item disabled"><span
+                                                                class="page-link">...</span></li>
+                                                    </c:if>
+                                                    <c:if test="${i == totalPages - 1 && currentPage < totalPages - 3}">
+                                                        <li class="page-item disabled"><span
+                                                                class="page-link">...</span></li>
+                                                    </c:if>
+                                                </c:forEach>
+
+                                                <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                                    <a class="page-link" href="?page=${currentPage + 1}">
+                                                        <i class="bi bi-chevron-right"></i>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </nav>
+                                    </c:if>
                                 </div>
                             </div>
                         </div>

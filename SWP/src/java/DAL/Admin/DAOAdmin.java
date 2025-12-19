@@ -12,20 +12,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DAOAdmin extends DBContext {
-    
+
     public static final DAOAdmin INSTANCE = new DAOAdmin();
-    
+
     private DAOAdmin() {
     }
-    
+
     // ==========================================
     // DASHBOARD METRICS
     // ==========================================
-    
+
     public int getTotalAccounts() {
         String sql = "SELECT COUNT(*) FROM users";
         try (PreparedStatement ps = connection.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+                ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt(1);
             }
@@ -34,16 +34,57 @@ public class DAOAdmin extends DBContext {
         }
         return 0;
     }
-    
+
+    public java.util.Map<String, Integer> getUsersCountByRole() {
+        java.util.Map<String, Integer> map = new java.util.HashMap<>();
+        String sql = "SELECT r.role_name, COUNT(u.user_id) as count FROM roles r LEFT JOIN users u ON r.role_id = u.role_id GROUP BY r.role_name";
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                map.put(rs.getString("role_name"), rs.getInt("count"));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DAOAdmin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return map;
+    }
+
+    public int getActiveUserCount() {
+        String sql = "SELECT COUNT(*) FROM users WHERE is_active = 1";
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DAOAdmin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+
+    public java.util.Map<String, Integer> getRoomStatusCounts() {
+        java.util.Map<String, Integer> map = new java.util.HashMap<>();
+        String sql = "SELECT status, COUNT(*) as count FROM rooms GROUP BY status";
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                map.put(rs.getString("status"), rs.getInt("count"));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DAOAdmin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return map;
+    }
+
     // ==========================================
     // USER MANAGEMENT (Advanced)
     // ==========================================
-    
-    public List<User> getUsers(String search, String roleIdStr, String statusStr, 
-                               String sortBy, String sortOrder, int page, int pageSize) {
+
+    public List<User> getUsers(String search, String roleIdStr, String statusStr,
+            String sortBy, String sortOrder, int page, int pageSize) {
         List<User> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT * FROM users WHERE 1=1");
-        
+
         if (search != null && !search.isBlank()) {
             sql.append(" AND (username LIKE ? OR full_name LIKE ? OR email LIKE ? OR phone LIKE ?)");
         }
@@ -53,11 +94,13 @@ public class DAOAdmin extends DBContext {
         if (statusStr != null && !statusStr.isBlank()) {
             sql.append(" AND is_active = ?");
         }
-        
+
         // Sorting
-        if (sortBy == null || sortBy.isBlank()) sortBy = "user_id";
-        if (sortOrder == null || sortOrder.isBlank()) sortOrder = "ASC";
-        
+        if (sortBy == null || sortBy.isBlank())
+            sortBy = "user_id";
+        if (sortOrder == null || sortOrder.isBlank())
+            sortOrder = "ASC";
+
         String validSort = switch (sortBy) {
             case "username" -> "username";
             case "fullName" -> "full_name";
@@ -65,14 +108,15 @@ public class DAOAdmin extends DBContext {
             case "status" -> "is_active";
             default -> "user_id";
         };
-        
-        sql.append(" ORDER BY ").append(validSort).append(" ").append("DESC".equalsIgnoreCase(sortOrder) ? "DESC" : "ASC");
-        
+
+        sql.append(" ORDER BY ").append(validSort).append(" ")
+                .append("DESC".equalsIgnoreCase(sortOrder) ? "DESC" : "ASC");
+
         // Pagination
         if (page > 0 && pageSize > 0) {
             sql.append(" LIMIT ? OFFSET ?");
         }
-        
+
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             int idx = 1;
             if (search != null && !search.isBlank()) {
@@ -92,7 +136,7 @@ public class DAOAdmin extends DBContext {
                 ps.setInt(idx++, pageSize);
                 ps.setInt(idx++, (page - 1) * pageSize);
             }
-            
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     User u = new User();
@@ -111,10 +155,10 @@ public class DAOAdmin extends DBContext {
         }
         return list;
     }
-    
+
     public int countUsers(String search, String roleIdStr, String statusStr) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users WHERE 1=1");
-        
+
         if (search != null && !search.isBlank()) {
             sql.append(" AND (username LIKE ? OR full_name LIKE ? OR email LIKE ? OR phone LIKE ?)");
         }
@@ -124,7 +168,7 @@ public class DAOAdmin extends DBContext {
         if (statusStr != null && !statusStr.isBlank()) {
             sql.append(" AND is_active = ?");
         }
-        
+
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             int idx = 1;
             if (search != null && !search.isBlank()) {
@@ -140,16 +184,17 @@ public class DAOAdmin extends DBContext {
             if (statusStr != null && !statusStr.isBlank()) {
                 ps.setBoolean(idx++, Boolean.parseBoolean(statusStr));
             }
-            
+
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next())
+                    return rs.getInt(1);
             }
         } catch (SQLException ex) {
             Logger.getLogger(DAOAdmin.class.getName()).log(Level.SEVERE, null, ex);
         }
         return 0;
     }
-    
+
     public User getUserById(int id) {
         String sql = "SELECT * FROM users WHERE user_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -172,7 +217,7 @@ public class DAOAdmin extends DBContext {
         }
         return null;
     }
-    
+
     public boolean updateUser(User user) {
         String sql = "UPDATE users SET full_name=?, email=?, phone=?, role_id=?, is_active=? WHERE user_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -182,14 +227,14 @@ public class DAOAdmin extends DBContext {
             ps.setInt(4, user.getRoleId());
             ps.setBoolean(5, user.getActive());
             ps.setInt(6, user.getUserId());
-            
+
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             Logger.getLogger(DAOAdmin.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
     }
-    
+
     public boolean toggleUserStatus(int userId, boolean isActive) {
         String sql = "UPDATE users SET is_active=? WHERE user_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -201,7 +246,7 @@ public class DAOAdmin extends DBContext {
         }
         return false;
     }
-    
+
     public boolean resetPassword(int userId, String newPassword) {
         String sql = "UPDATE users SET password_hash=? WHERE user_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {

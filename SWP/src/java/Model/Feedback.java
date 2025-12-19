@@ -15,11 +15,11 @@ public class Feedback {
     }
 
     public Feedback(Integer feedbackId,
-                    Integer bookingId,
-                    Integer customerId,
-                    Integer rating,
-                    String comment,
-                    LocalDateTime createdAt) {
+            Integer bookingId,
+            Integer customerId,
+            Integer rating,
+            String comment,
+            LocalDateTime createdAt) {
 
         setFeedbackId(feedbackId);
         setBookingId(bookingId);
@@ -84,5 +84,16 @@ public class Feedback {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    // Transient field for display
+    private String customerName;
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 }

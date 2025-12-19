@@ -8,7 +8,9 @@ public class RoomInspection {
     public enum Type {
         CHECKIN,
         CHECKOUT,
-        ROUTINE
+        ROUTINE,
+        DAILY,
+        SUPPLY
     }
 
     private Integer inspectionId;
@@ -21,6 +23,11 @@ public class RoomInspection {
 
     // Optional: List of details
     private List<InspectionDetail> details;
+
+    // Display fields
+    private String roomNumber;
+    private String inspectorName;
+    private String customerName;
 
     public RoomInspection() {
     }
@@ -104,5 +111,29 @@ public class RoomInspection {
 
     public void setDetails(List<InspectionDetail> details) {
         this.details = details;
+    }
+
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public void setRoomNumber(String roomNumber) {
+        this.roomNumber = roomNumber;
+    }
+
+    public String getInspectorName() {
+        return inspectorName;
+    }
+
+    public void setInspectorName(String inspectorName) {
+        this.inspectorName = inspectorName;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 }

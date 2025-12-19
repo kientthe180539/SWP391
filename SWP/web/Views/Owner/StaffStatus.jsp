@@ -29,20 +29,21 @@
                             <div class="col-md-4">
                                 <div class="card h-100">
                                     <div class="card-header bg-success text-white">
-                                        <h5 class="mb-0">On Shift</h5>
+                                        <h5 class="mb-0">On Shift (${onShift.size()})</h5>
                                     </div>
                                     <div class="card-body">
                                         <ul class="list-group list-group-flush">
-                                            <li
-                                                class="list-group-item d-flex justify-content-between align-items-center">
-                                                Alice (Reception)
-                                                <span class="badge bg-success rounded-pill">Active</span>
-                                            </li>
-                                            <li
-                                                class="list-group-item d-flex justify-content-between align-items-center">
-                                                Bob (Housekeeping)
-                                                <span class="badge bg-success rounded-pill">Active</span>
-                                            </li>
+                                            <c:forEach var="emp" items="${onShift}">
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-center">
+                                                    ${emp.fullName}
+                                                    <span class="badge bg-success rounded-pill">Active</span>
+                                                </li>
+                                            </c:forEach>
+                                            <c:if test="${empty onShift}">
+                                                <li class="list-group-item text-muted text-center">No staff on shift
+                                                </li>
+                                            </c:if>
                                         </ul>
                                     </div>
                                 </div>
@@ -51,12 +52,17 @@
                             <div class="col-md-4">
                                 <div class="card h-100">
                                     <div class="card-header bg-secondary text-white">
-                                        <h5 class="mb-0">Off Shift</h5>
+                                        <h5 class="mb-0">Off Shift (${offShift.size()})</h5>
                                     </div>
                                     <div class="card-body">
                                         <ul class="list-group list-group-flush">
-                                            <li class="list-group-item">Charlie (Housekeeping)</li>
-                                            <li class="list-group-item">David (Reception)</li>
+                                            <c:forEach var="emp" items="${offShift}">
+                                                <li class="list-group-item">${emp.fullName}</li>
+                                            </c:forEach>
+                                            <c:if test="${empty offShift}">
+                                                <li class="list-group-item text-muted text-center">No staff off shift
+                                                </li>
+                                            </c:if>
                                         </ul>
                                     </div>
                                 </div>

@@ -9,9 +9,11 @@ import DAL.ReplenishmentRequestDAO;
 import DAL.AmenityDAO;
 import Model.ReplenishmentRequest;
 import Model.Amenity;
+import Model.RoomTypeAmenity;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -29,7 +31,12 @@ import jakarta.servlet.http.HttpServletResponse;
         "/housekeeping/create-task",
         "/housekeeping/rooms",
         "/housekeeping/supplies",
-        "/housekeeping/create-replenishment"
+        "/housekeeping/create-replenishment",
+
+        "/housekeeping/schedule",
+        "/housekeeping/history",
+        "/housekeeping/my-issues",
+        "/housekeeping/get-room-amenities"
 })
 public class HousekeepingController extends HttpServlet {
 
@@ -76,6 +83,14 @@ public class HousekeepingController extends HttpServlet {
                 showSupplies(request, response);
             case "/housekeeping/create-replenishment" ->
                 showCreateReplenishment(request, response);
+            case "/housekeeping/schedule" ->
+                showSchedule(request, response);
+            case "/housekeeping/history" ->
+                showTaskHistory(request, response);
+            case "/housekeeping/my-issues" ->
+                showMyIssues(request, response);
+            case "/housekeeping/get-room-amenities" ->
+                getRoomAmenities(request, response);
             default ->
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -143,7 +158,11 @@ public class HousekeepingController extends HttpServlet {
         int staffId = currentUser.getUserId();
         LocalDate today = LocalDate.now();
 
-        // Các phòng cần dọn (DIRTY / CLEANING)
+        // Các phòng cần dọn (DIRTY / CLEANING) - This might be less relevant for
+        // specific staff, but good for overview if manager
+        // Or specific to assigned rooms? Current logic gets ALL.
+        // For standard HK, maybe we just show assigned ones. But let's keep existing
+        // logic plus new stuff.
         List<Room> roomsNeedCleaning = DAOHousekeeping.INSTANCE.getRoomsNeedingCleaning();
 
         // Task dọn phòng của nhân viên hôm nay
@@ -152,18 +171,45 @@ public class HousekeepingController extends HttpServlet {
         // Phân ca làm việc hôm nay
         List<StaffAssignment> todayAssignments = DAOHousekeeping.INSTANCE.getAssignmentsForStaffOnDate(staffId, today);
 
+        // Fetch Replenishment Requests
+        ReplenishmentRequestDAO reqDAO = new ReplenishmentRequestDAO();
+        List<ReplenishmentRequest> myRequests = reqDAO.getRequestsByRequester(staffId);
+
+        // Calculate Stats
+        long pendingModules = todayTasks.stream().filter(t -> t.getStatus() != HousekeepingTask.TaskStatus.DONE)
+                .count();
+        long completedModules = todayTasks.stream().filter(t -> t.getStatus() == HousekeepingTask.TaskStatus.DONE)
+                .count();
+        long pendingRequests = myRequests.stream().filter(r -> r.getStatus() == ReplenishmentRequest.Status.PENDING)
+                .count();
+
         request.setAttribute("roomsNeedCleaning", roomsNeedCleaning);
         request.setAttribute("todayTasks", todayTasks);
         request.setAttribute("todayAssignments", todayAssignments);
+        request.setAttribute("myRequests", myRequests);
+
+        request.setAttribute("pendingCount", pendingModules);
+        request.setAttribute("completedCount", completedModules);
+        request.setAttribute("requestCount", pendingRequests);
+
         request.setAttribute("today", today);
+        request.setAttribute("hkp", DAOHousekeeping.INSTANCE);
 
         request.getRequestDispatcher("/Views/Housekeeping/Dashboard.jsp")
                 .forward(request, response);
     }
 
-    // ======================================================
-    // 2. Cleaning Task List Screen
-    // ======================================================
+    private void showSchedule(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // Permanent Schedule View
+        List<StaffAssignment> assignments = DAL.Owner.DAOOwner.INSTANCE.getAllCurrentAssignments();
+
+        request.setAttribute("assignments", assignments);
+        request.setAttribute("date", LocalDate.now());
+        request.getRequestDispatcher("/Views/Shared/ViewSchedule.jsp").forward(request, response);
+    }
+
     // ======================================================
     // 2. Cleaning Task List Screen
     // ======================================================
@@ -206,15 +252,16 @@ public class HousekeepingController extends HttpServlet {
         }
 
         List<HousekeepingTask> tasks = DAOHousekeeping.INSTANCE.getTasks(
-                staffId, dateFrom, dateTo, statusStr, search, dbTaskType, sortBy, sortOrder, page, pageSize);
-        int totalTasks = DAOHousekeeping.INSTANCE.countTasks(staffId, dateFrom, dateTo, statusStr, search, dbTaskType);
+                staffId, dateFrom, dateTo, statusStr, search, dbTaskType, sortBy, sortOrder, page, pageSize, 6);
+        int totalTasks = DAOHousekeeping.INSTANCE.countTasks(staffId, dateFrom, dateTo, statusStr, search, dbTaskType,
+                6);
         int totalPages = (int) Math.ceil((double) totalTasks / pageSize);
 
         request.setAttribute("tasks", tasks);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalTasks", totalTasks);
-
+        request.setAttribute("hkp", DAOHousekeeping.INSTANCE);
         // Preserve filter params
         request.setAttribute("dateFrom", dateFromStr);
         request.setAttribute("dateTo", dateToStr);
@@ -225,6 +272,59 @@ public class HousekeepingController extends HttpServlet {
         request.setAttribute("type", type); // Pass back to view for title/active state
 
         request.getRequestDispatcher("/Views/Housekeeping/TaskList.jsp")
+                .forward(request, response);
+    }
+
+    private void showTaskHistory(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
+        int staffId = currentUser.getUserId();
+
+        String dateFromStr = request.getParameter("dateFrom");
+        String dateToStr = request.getParameter("dateTo");
+        // Status is always DONE for history
+        String statusStr = "DONE";
+        String search = request.getParameter("search");
+        String sortBy = request.getParameter("sortBy");
+        String sortOrder = request.getParameter("sortOrder");
+        String pageStr = request.getParameter("page");
+        // Type could be anything, but we usually want all.
+        // If user wants to filter history by type, they can add inputs.
+        // For now, let's allow "type" param if it exists, or null (all).
+        String type = request.getParameter("type");
+
+        LocalDate dateFrom = null;
+        LocalDate dateTo = null;
+        try {
+            if (dateFromStr != null && !dateFromStr.isBlank())
+                dateFrom = LocalDate.parse(dateFromStr);
+            if (dateToStr != null && !dateToStr.isBlank())
+                dateTo = LocalDate.parse(dateToStr);
+        } catch (DateTimeParseException e) {
+        }
+
+        int page = 1;
+        int pageSize = 10;
+        try {
+            if (pageStr != null)
+                page = Integer.parseInt(pageStr);
+        } catch (NumberFormatException e) {
+        }
+
+        List<HousekeepingTask> tasks = DAOHousekeeping.INSTANCE.getCompletedTasksAndInspections(
+                staffId, search, page, pageSize);
+        int totalTasks = DAOHousekeeping.INSTANCE.countCompletedTasksAndInspections(staffId, search);
+        int totalPages = (int) Math.ceil((double) totalTasks / pageSize);
+
+        request.setAttribute("tasks", tasks);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalTasks", totalTasks);
+        request.setAttribute("hkp", DAOHousekeeping.INSTANCE);
+        // Preserve filter params
+        request.setAttribute("search", search);
+
+        request.getRequestDispatcher("/Views/Housekeeping/TaskHistory.jsp")
                 .forward(request, response);
     }
 
@@ -303,6 +403,76 @@ public class HousekeepingController extends HttpServlet {
         }
 
         int taskId = Integer.parseInt(idStr);
+        HousekeepingTask task = DAOHousekeeping.INSTANCE.getTaskById(taskId);
+
+        if (task == null) {
+            request.setAttribute("type", "error");
+            request.setAttribute("mess", "Task not found!");
+            request.getRequestDispatcher("/Views/Housekeeping/TaskDetail.jsp").forward(request, response);
+            return;
+        }
+
+        LocalDate taskDate = task.getTaskDate();
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+
+        if (!taskDate.equals(today) && !taskDate.equals(yesterday)) {
+            request.setAttribute("type", "error");
+            request.setAttribute("mess", "Only tasks for today or yesterday can be updated.");
+            request.setAttribute("task", task); // Ensure task is set for the view
+
+            // Re-fetch room for the view if needed, though TaskDetail usually fetches it
+            // via another GET or if we forward
+            // But we are forwarding to TaskDetail.jsp which might expect 'task' and 'room'
+            // attributes.
+            // showTaskDetail sets both. Here we are inside doPost.
+            // Ideally we should redirect or set attributes.
+            // The original code just set message and forwarded.
+            // BUT the view might need 'task' and 'room' to render the form again?
+            // The original code at the end forwards to
+            // "/Views/Housekeeping/TaskDetail.jsp".
+            // If validation fails, we should probably ensure the view can render.
+            // Existing code doesn't re-fetch data on success/fail fall-through?
+            // Wait, looking at original code:
+            // It calls
+            // `request.getRequestDispatcher("/Views/Housekeeping/TaskDetail.jsp").forward(request,
+            // response);` at the end.
+            // But it doesn't seem to set `task` or `room` attributes again?
+            // If the JSP uses `${task}`, it will be null if not set!
+            // Let's check `showTaskDetail` to see what it sets. It sets `task` and `room`.
+            // The POST method `handleUpdateTask` seems to rely on the forward?
+            // BUT if we forward to JSP, we must provide the model.
+            // The existing code might be buggy or I missed where it sets the attributes.
+            // Let's look at lines 426-427 of original file.
+            // On success/fail, it sets `href` to `tasks` or `task-detail?id=...`.
+            // Maybe the JSP uses `href` to show a "Back" button, but checking
+            // `TaskDetail.jsp` (not open, but standard pattern)
+            // usually you want to see the form again.
+            // IF the existing code relies on the JSP just showing a message and likely
+            // redirecting or a link?
+            // "href" attribute suggests a client-side redirect or link.
+            // But let's look at the failure case in original code:
+            // request.setAttribute("href", "task-detail?id=" + taskId);
+            // It seems it relies on the JSP to show the error and a link to go back/reload?
+            // I will follow the existing pattern: set "type", "mess", "href" and forward.
+            // But since I found the task, I might as well set it.
+
+            // Actually, if I just set the error and forward, and the JSP expects `task`
+            // object to display the *form*,
+            // then the form will be empty/error if I don't set it.
+            // To be safe, I will fetch room and set task/room, OR just rely on the 'href'
+            // which implies the user might navigate away.
+            // However, better UX is to show the error ON the form.
+            // I'll add task/room to request attributes just in case.
+            Room room = DAOHousekeeping.INSTANCE.getRoomById(task.getRoomId());
+            request.setAttribute("task", task);
+            request.setAttribute("room", room);
+            request.setAttribute("href", "tasks"); // Or "task-detail?id=" + taskId
+
+            request.getRequestDispatcher("/Views/Housekeeping/TaskDetail.jsp").forward(request, response);
+            return;
+        }
+
         try {
             HousekeepingTask.TaskStatus newStatus = HousekeepingTask.TaskStatus.valueOf(statusStr);
 
@@ -366,7 +536,7 @@ public class HousekeepingController extends HttpServlet {
             request.setAttribute("type", "error");
             request.setAttribute("mess", "Thiếu thông tin báo sự cố");
             request.setAttribute("href", "housekeeping/issue-report");
-            request.getRequestDispatcher("Views/Housekeeping/IssueReport.jsp")
+            request.getRequestDispatcher("/Views/Housekeeping/IssueReport.jsp")
                     .forward(request, response);
             return;
         }
@@ -389,20 +559,29 @@ public class HousekeepingController extends HttpServlet {
         if (ok) {
             request.setAttribute("type", "success");
             request.setAttribute("mess", "Gửi báo cáo sự cố thành công");
-            request.setAttribute("href", "housekeeping/dashboard");
+            request.setAttribute("href", "my-issues");
         } else {
             request.setAttribute("type", "error");
             request.setAttribute("mess", "Gửi báo cáo sự cố thất bại");
             request.setAttribute("href", "housekeeping/issue-report?roomId=" + roomId);
         }
 
-        request.getRequestDispatcher("Views/Housekeeping/IssueReport.jsp")
+        request.getRequestDispatcher("/Views/Housekeeping/IssueReport.jsp")
                 .forward(request, response);
     }
 
     // ======================================================
     // 7. Room State Update Screen
     // ======================================================
+    private void showMyIssues(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User currentUser = (User) request.getSession().getAttribute("currentUser");
+        List<Model.IssueReport> myIssues = DAOHousekeeping.INSTANCE.getIssuesByReporter(currentUser.getUserId());
+
+        request.setAttribute("issues", myIssues);
+        request.getRequestDispatcher("/Views/Housekeeping/MyIssueList.jsp").forward(request, response);
+    }
+
     private void showRoomUpdateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String roomIdStr = request.getParameter("roomId");
@@ -419,7 +598,7 @@ public class HousekeepingController extends HttpServlet {
         }
 
         request.setAttribute("room", room);
-        request.getRequestDispatcher("Views/Housekeeping/RoomStateUpdate.jsp")
+        request.getRequestDispatcher("/Views/Housekeeping/RoomStateUpdate.jsp")
                 .forward(request, response);
     }
 
@@ -448,13 +627,13 @@ public class HousekeepingController extends HttpServlet {
                 request.setAttribute("href", "housekeeping/room-update?roomId=" + roomId);
             }
 
-            request.getRequestDispatcher("Views/Housekeeping/RoomStateUpdate.jsp")
+            request.getRequestDispatcher("/Views/Housekeeping/RoomStateUpdate.jsp")
                     .forward(request, response);
         } catch (IllegalArgumentException ex) {
             request.setAttribute("type", "error");
             request.setAttribute("mess", "Trạng thái phòng không hợp lệ");
             request.setAttribute("href", "housekeeping/room-update?roomId=" + roomIdStr);
-            request.getRequestDispatcher("Views/Housekeeping/RoomStateUpdate.jsp")
+            request.getRequestDispatcher("/Views/Housekeeping/RoomStateUpdate.jsp")
                     .forward(request, response);
         }
     }
@@ -505,8 +684,14 @@ public class HousekeepingController extends HttpServlet {
         // I will list rooms so they can select a room.
         List<Room> rooms = DAOHousekeeping.INSTANCE.getAllRooms();
 
+        String preRoomId = request.getParameter("roomId");
+        String preAmenityId = request.getParameter("amenityId");
+
         request.setAttribute("amenities", amenities);
         request.setAttribute("rooms", rooms);
+        request.setAttribute("preRoomId", preRoomId);
+        request.setAttribute("preAmenityId", preAmenityId);
+
         request.getRequestDispatcher("/Views/Housekeeping/CreateReplenishment.jsp").forward(request, response);
     }
 
@@ -573,7 +758,7 @@ public class HousekeepingController extends HttpServlet {
                 if (ok) {
                     request.setAttribute("type", "success");
                     request.setAttribute("mess", "Gửi yêu cầu thành công");
-                    request.setAttribute("href", "housekeeping/supplies");
+                    request.setAttribute("href", "supplies");
                 } else {
                     request.setAttribute("type", "error");
                     request.setAttribute("mess", "Gửi yêu cầu thất bại");
@@ -589,6 +774,28 @@ public class HousekeepingController extends HttpServlet {
         }
 
         request.getRequestDispatcher("/Views/Housekeeping/CreateReplenishment.jsp").forward(request, response);
+    }
+
+    private void getRoomAmenities(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String roomIdStr = request.getParameter("roomId");
+        List<RoomTypeAmenity> roomAmenities = new ArrayList<>();
+
+        if (roomIdStr != null && !roomIdStr.isBlank()) {
+            try {
+                int roomId = Integer.parseInt(roomIdStr);
+                Room room = DAOHousekeeping.INSTANCE.getRoomById(roomId);
+                if (room != null) {
+                    AmenityDAO amenityDAO = new AmenityDAO();
+                    roomAmenities = amenityDAO.getAmenitiesByRoomType(room.getRoomTypeId());
+                }
+            } catch (NumberFormatException e) {
+                // Ignore invalid ID
+            }
+        }
+
+        request.setAttribute("roomAmenities", roomAmenities);
+        request.getRequestDispatcher("/Views/Housekeeping/Components/AmenityOptions.jsp").forward(request, response);
     }
 
     @Override

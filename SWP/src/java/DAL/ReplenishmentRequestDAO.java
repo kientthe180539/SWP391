@@ -100,6 +100,30 @@ public class ReplenishmentRequestDAO extends DAO {
         return list;
     }
 
+    public List<ReplenishmentRequest> getRequestsByRequester(int userId) {
+        List<ReplenishmentRequest> list = new ArrayList<>();
+        String sql = "SELECT r.*, a.name AS amenity_name, a.description AS amenity_desc, "
+                + "u1.full_name AS requester_name, u2.full_name AS approver_name "
+                + "FROM replenishment_requests r "
+                + "JOIN amenities a ON r.amenity_id = a.amenity_id "
+                + "JOIN users u1 ON r.requested_by = u1.user_id "
+                + "LEFT JOIN users u2 ON r.approved_by = u2.user_id "
+                + "WHERE r.requested_by = ? "
+                + "ORDER BY r.created_at DESC";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRequestWithDetails(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean updateRequestStatus(int requestId, ReplenishmentRequest.Status status, int approvedBy) {
         String sql = "{CALL sp_update_replenishment_status(?, ?, ?)}";
 

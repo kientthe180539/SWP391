@@ -17,12 +17,16 @@ public class HousekeepingTask {
 
     public enum TaskType {
         CLEANING,
-        INSPECTION
+        INSPECTION,
+        CHECKIN,
+        CHECKOUT
     }
 
     private Integer taskId;
     private Integer roomId;
+    private String roomNumber; // Transient field for display
     private Integer assignedTo;
+    private String assignedToName; // Transient field for display
     private LocalDate taskDate;
     private TaskType taskType;
     private TaskStatus status;
@@ -35,15 +39,15 @@ public class HousekeepingTask {
     }
 
     public HousekeepingTask(Integer taskId,
-                            Integer roomId,
-                            Integer assignedTo,
-                            LocalDate taskDate,
-                            TaskType taskType,
-                            TaskStatus status,
-                            String note,
-                            Integer createdBy,
-                            LocalDateTime createdAt,
-                            LocalDateTime updatedAt) {
+            Integer roomId,
+            Integer assignedTo,
+            LocalDate taskDate,
+            TaskType taskType,
+            TaskStatus status,
+            String note,
+            Integer createdBy,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
 
         setTaskId(taskId);
         setRoomId(roomId);
@@ -76,6 +80,14 @@ public class HousekeepingTask {
         this.roomId = roomId;
     }
 
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public void setRoomNumber(String roomNumber) {
+        this.roomNumber = roomNumber;
+    }
+
     public Integer getAssignedTo() {
         return assignedTo;
     }
@@ -85,6 +97,14 @@ public class HousekeepingTask {
             throw new IllegalArgumentException("AssignedTo user id cannot be null");
         }
         this.assignedTo = assignedTo;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
+    }
+
+    public void setAssignedToName(String assignedToName) {
+        this.assignedToName = assignedToName;
     }
 
     public LocalDate getTaskDate() {

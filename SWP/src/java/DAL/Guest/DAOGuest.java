@@ -17,28 +17,31 @@ public class DAOGuest extends DAO {
     private DAOGuest() {
     }
 
+    
     /**
      * Lấy danh sách phòng có trạng thái AVAILABLE và filter theo roomTypeId,
-     * minPrice, maxPrice Có phân trang
+     * minPrice, maxPrice, checkIn, checkOut Có phân trang
      */
     public List<Map.Entry<Room, RoomType>> getAvailableRooms(
             Integer roomTypeId,
             BigDecimal minPrice,
             BigDecimal maxPrice,
+            java.time.LocalDate checkIn,
+            java.time.LocalDate checkOut,
             int page,
-            int pageSize
-    ) {
+            int pageSize) {
         List<Map.Entry<Room, RoomType>> list = new ArrayList<>();
         int offset = (page - 1) * pageSize;
 
+        // Base query: Active rooms not in MAINTENANCE
         String sql = """
-        SELECT r.*, 
-               rt.room_type_id AS rt_id, rt.type_name, rt.description AS rt_desc,
-               rt.base_price, rt.max_occupancy
-        FROM rooms r
-        JOIN room_types rt ON r.room_type_id = rt.room_type_id
-        WHERE r.status = 'AVAILABLE'
-    """;
+                    SELECT r.*,
+                           rt.room_type_id AS rt_id, rt.type_name, rt.description AS rt_desc,
+                           rt.base_price, rt.max_occupancy
+                    FROM rooms r
+                    JOIN room_types rt ON r.room_type_id = rt.room_type_id
+                    WHERE r.is_active = 1
+                """;
 
         List<Object> params = new ArrayList<>();
 
@@ -55,6 +58,24 @@ public class DAOGuest extends DAO {
         if (maxPrice != null) {
             sql += " AND rt.base_price <= ? ";
             params.add(maxPrice);
+        }
+
+        // Date range filter: Exclude rooms with overlapping bookings
+        if (checkIn != null && checkOut != null) {
+            sql += """
+                    AND NOT EXISTS (
+                        SELECT 1 FROM bookings b
+                        WHERE b.room_id = r.room_id
+                        AND b.status IN ('PENDING', 'CONFIRMED', 'CHECKED_IN')
+                        AND b.checkin_date < ? AND b.checkout_date > ? 
+                        AND r.status != 'MAINTENANCE' AND r.status != 'BOOKED' AND r.status != 'OCCUPIED'
+                    )
+                    """;
+            params.add(checkOut); // Note: Logic overlap is (StartA < EndB) and (EndA > StartB)
+            params.add(checkIn);
+        } else {
+            // Fallback: If no dates selected, show currently available rooms
+            sql += " AND r.status != 'MAINTENANCE' AND r.status != 'BOOKED' AND r.status != 'OCCUPIED'";
         }
 
         sql += " ORDER BY r.room_number LIMIT ? OFFSET ?";
@@ -98,21 +119,39 @@ public class DAOGuest extends DAO {
     /**
      * Đếm tổng số phòng AVAILABLE để phân trang
      */
-    public int countAvailableRooms(Integer roomTypeId) {
+    public int countAvailableRooms(Integer roomTypeId, java.time.LocalDate checkIn, java.time.LocalDate checkOut) {
         String sql = """
-            SELECT COUNT(*)
-            FROM rooms r
-            JOIN room_types rt ON r.room_type_id = rt.room_type_id
-            WHERE r.status = 'AVAILABLE'
-        """;
+                    SELECT COUNT(*)
+                    FROM rooms r
+                    JOIN room_types rt ON r.room_type_id = rt.room_type_id
+                    WHERE r.is_active = 1 AND r.status != 'MAINTENANCE'
+                """;
+
+        List<Object> params = new ArrayList<>();
 
         if (roomTypeId != null) {
             sql += " AND rt.room_type_id = ?";
+            params.add(roomTypeId);
+        }
+
+        if (checkIn != null && checkOut != null) {
+            sql += """
+                    AND NOT EXISTS (
+                        SELECT 1 FROM bookings b
+                        WHERE b.room_id = r.room_id
+                        AND b.status IN ('PENDING', 'CONFIRMED', 'CHECKED_IN')
+                        AND b.checkin_date < ? AND b.checkout_date > ?
+                    )
+                    """;
+            params.add(checkOut);
+            params.add(checkIn);
+        } else {
+            sql += " AND r.status = 'AVAILABLE' ";
         }
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            if (roomTypeId != null) {
-                ps.setInt(1, roomTypeId);
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -152,12 +191,12 @@ public class DAOGuest extends DAO {
      */
     public Room getRoomDetail(int roomId) {
         String sql = """
-            SELECT r.*, rt.type_name, rt.description AS type_description,
-                   rt.base_price, rt.max_occupancy
-            FROM rooms r
-            JOIN room_types rt ON r.room_type_id = rt.room_type_id
-            WHERE r.room_id = ?
-            """;
+                SELECT r.*, rt.type_name, rt.description AS type_description,
+                       rt.base_price, rt.max_occupancy
+                FROM rooms r
+                JOIN room_types rt ON r.room_type_id = rt.room_type_id
+                WHERE r.room_id = ?
+                """;
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, roomId);
@@ -185,12 +224,12 @@ public class DAOGuest extends DAO {
 
     public Map.Entry<Room, RoomType> getRoomDetailWithType(int roomId) {
         String sql = """
-            SELECT r.*, rt.room_type_id AS rt_id, rt.type_name, rt.description AS rt_desc,
-                   rt.base_price, rt.max_occupancy
-            FROM rooms r
-            JOIN room_types rt ON r.room_type_id = rt.room_type_id
-            WHERE r.room_id = ?
-            """;
+                SELECT r.*, rt.room_type_id AS rt_id, rt.type_name, rt.description AS rt_desc,
+                       rt.base_price, rt.max_occupancy
+                FROM rooms r
+                JOIN room_types rt ON r.room_type_id = rt.room_type_id
+                WHERE r.room_id = ?
+                """;
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, roomId);

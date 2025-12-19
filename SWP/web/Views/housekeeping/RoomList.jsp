@@ -93,9 +93,13 @@
                                                         ${r.status}
                                                     </span>
 
-                                                    <div class="d-grid">
-                                                        <a href="<c:url value='/housekeeping/room-update'><c:param name='roomId' value='${r.roomId}'/></c:url>"
+                                                    <div class="d-grid gap-2">
+                                                        <a href="<c:url value='/housekeeping/inspection'><c:param name='roomId' value='${r.roomId}'/><c:param name='type' value='ROUTINE'/></c:url>"
                                                             class="btn btn-sm btn-outline-primary">
+                                                            Inspect
+                                                        </a>
+                                                        <a href="<c:url value='/housekeeping/room-update'><c:param name='roomId' value='${r.roomId}'/></c:url>"
+                                                            class="btn btn-sm btn-outline-secondary">
                                                             Update Status
                                                         </a>
                                                     </div>

@@ -91,7 +91,7 @@
                                         <span>Inspections</span>
                                     </a>
                                 </li>
-<!--                                <li class="nav-item">
+                                <!--                                <li class="nav-item">
                                     <a href="<c:url value='/manager/replenishment-requests'/>"
                                         class="nav-link ${pageContext.request.servletPath.endsWith('ReplenishmentRequests.jsp') ? 'active' : ''}">
                                         <i class="bi bi-box-seam"></i>
@@ -154,7 +154,7 @@
                                         </a>
                                     </li>
 
-<!--                                    <li class="nav-item">
+                                    <!--                                    <li class="nav-item">
                                         <a href="<c:url value='/housekeeping/supplies'/>"
                                             class="nav-link ${pageContext.request.servletPath.endsWith('Supplies.jsp') ? 'active' : ''}">
                                             <i class="bi bi-box-seam"></i>
@@ -176,6 +176,68 @@
                                         </a>
                                     </li>
                                 </c:when>
+
+                                <%-- Receptionist Role (ID: 2) --%>
+                                    <c:when test="${sessionScope.currentUser.roleId == 2}">
+                                        <li class="nav-item">
+                                            <a href="<c:url value='/receptionist/dashboard'/>"
+                                                class="nav-link ${pageContext.request.servletPath.endsWith('Dashboard.jsp') ? 'active' : ''}">
+                                                <i class="bi bi-speedometer2"></i>
+                                                <span>Dashboard</span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="<c:url value='/receptionist/reservations'/>"
+                                                class="nav-link ${pageContext.request.servletPath.endsWith('ReservationList.jsp') ? 'active' : ''}">
+                                                <i class="bi bi-calendar-check"></i>
+                                                <span>Reservations</span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="<c:url value='/receptionist/checkinout'/>"
+                                                class="nav-link ${pageContext.request.servletPath.endsWith('CheckInOut.jsp') ? 'active' : ''}">
+                                                <i class="bi bi-key"></i>
+                                                <span>Check-in/out</span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="<c:url value='/receptionist/room-status'/>"
+                                                class="nav-link ${pageContext.request.servletPath.endsWith('RoomStatus.jsp') ? 'active' : ''}">
+                                                <i class="bi bi-door-open"></i>
+                                                <span>Rooms</span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="<c:url value='/receptionist/direct-booking'/>"
+                                                class="nav-link ${pageContext.request.servletPath.endsWith('DirectBooking.jsp') ? 'active' : ''}">
+                                                <i class="bi bi-plus-circle"></i>
+                                                <span>Direct Booking</span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="<c:url value='/receptionist/availability'/>"
+                                                class="nav-link ${pageContext.request.servletPath.endsWith('AvailabilityCalendar.jsp') ? 'active' : ''}">
+                                                <i class="bi bi-calendar2-check"></i>
+                                                <span>Availability</span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-header">Personal</li>
+
+                                        <li class="nav-item">
+                                            <a href="<c:url value='/receptionist/schedule'/>"
+                                                class="nav-link ${pageContext.request.servletPath.endsWith('Schedule.jsp') ? 'active' : ''}">
+                                                <i class="bi bi-calendar-week"></i>
+                                                <span>My Shift</span>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="<c:url value='/receptionist/profile'/>"
+                                                class="nav-link ${pageContext.request.servletPath.endsWith('Profile.jsp') ? 'active' : ''}">
+                                                <i class="bi bi-person"></i>
+                                                <span>Profile</span>
+                                            </a>
+                                        </li>
+                                    </c:when>
                 </c:choose>
             </ul>
 

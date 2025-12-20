@@ -95,7 +95,7 @@
                                                         <th>Room Number</th>
                                                         <th>Floor</th>
                                                         <th>Room Type</th>
-                                                        <th>Status</th>
+                                                        <!-- <th>Status</th> -->
                                                         <th>Action</th>
                                                     </tr>
                                                 </thead>
@@ -129,7 +129,7 @@
                                                                     </c:if>
                                                                 </c:forEach>
                                                             </td>
-                                                            <td>
+                                                            <!-- <td>
                                                                 <span
                                                                     class="badge rounded-pill 
                                                             ${r.status == 'AVAILABLE' ? 'bg-success' : 
@@ -137,7 +137,7 @@
                                                               (r.status == 'CLEANING' ? 'bg-warning' : 'bg-secondary'))}">
                                                                     ${r.status}
                                                                 </span>
-                                                            </td>
+                                                            </td> -->
                                                             <td>
                                                                 <!-- Edit Button Trigger -->
                                                                 <a href="<c:url value='/owner/room-form?id=${r.roomId}'/>"
@@ -278,42 +278,6 @@
                                                 </c:forEach>
                                             </tbody>
                                         </table>
-                                        <!-- Pagination -->
-                                        <nav aria-label="Room types pagination" class="mt-4">
-                                            <ul class="pagination justify-content-center">
-                                                <c:if test="${currentPage > 1}">
-                                                    <li class="page-item">
-                                                        <a class="page-link"
-                                                           href="<c:url value='/owner/rooms?tab=types&page=${currentPage - 1}'/>"
-                                                           aria-label="Previous">
-                                                            <span aria-hidden="true">&laquo;</span>
-                                                        </a>
-                                                    </li>
-                                                </c:if>
-
-                                                <c:forEach begin="1" end="${totalPages}" var="i">
-                                                    <li class="page-item ${i == currentPage ? 'active' : ''}">
-                                                        <a class="page-link"
-                                                           href="<c:url value='/owner/rooms?tab=types&page=${i}'/>">${i}</a>
-                                                    </li>
-                                                </c:forEach>
-
-                                                <c:if test="${currentPage < totalPages}">
-                                                    <li class="page-item">
-                                                        <a class="page-link"
-                                                           href="<c:url value='/owner/rooms?tab=types&page=${currentPage + 1}'/>"
-                                                           aria-label="Next">
-                                                            <span aria-hidden="true">&raquo;</span>
-                                                        </a>
-                                                    </li>
-                                                </c:if>
-                                            </ul>
-                                            <div class="text-center text-muted">
-                                                Showing ${(currentPage - 1) * 10 + 1} to
-                                                    ${currentPage * 10 > totalTypes ? totalTypes : currentPage * 10}
-                                                of ${totalTypes} room types
-                                            </div>
-                                        </nav>
                                     </c:when>
                                 </c:choose>
                             </div>

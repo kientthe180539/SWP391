@@ -41,13 +41,13 @@
                                 <div class="form-group">
                                     <label>Email or Phone Number</label>
                                     <input type="text" name="identifier" placeholder="you@gmail.com or 0912345678"
-                                        value="${email}" required>
+                                        value="${identifier}" required>
                                 </div>
 
                                 <div class="form-group" style="position: relative;">
                                     <label>Password</label>
                                     <input type="password" name="password" id="passwordInput"
-                                        placeholder="Enter your password" required style="padding-right: 40px;" value="${password}">
+                                        placeholder="Enter your password" required style="padding-right: 40px;">
                                     <i class="bi bi-eye" id="togglePassword"
                                         onclick="togglePasswordVisibility('passwordInput', this)"
                                         style="position: absolute; right: 15px; top: 38px; cursor: pointer; color: #6b7280; font-size: 1.2rem;"></i>

@@ -127,7 +127,7 @@
                                                         <strong style="color: #856404;">Not paid yet!</strong>
                                                         <div style="font-size: 13px; color: #856404;">
                                                             Please pay within <strong class="countdown"
-                                                                data-created="${booking.createdAt}">12:00:00</strong> to
+                                                                data-created="${booking.createdAt}">00:05:00</strong> to
                                                             confirm your booking.
                                                         </div>
                                                     </div>
@@ -532,10 +532,10 @@
                                         closeBookingDetail();
                                 }
 
-                                // 12-hour countdown timer for pending payments
+                                // 5-minute countdown timer for pending payments (for testing)
                                 function updateCountdowns() {
                                     const countdowns = document.querySelectorAll('.countdown');
-                                    const PAYMENT_WINDOW_HOURS = 12;
+                                    const PAYMENT_WINDOW_MINUTES = 5;
 
                                     countdowns.forEach(countdown => {
                                         const createdAtStr = countdown.dataset.created;
@@ -543,7 +543,7 @@
 
                                         // Parse the created timestamp
                                         const createdAt = new Date(createdAtStr.replace(' ', 'T'));
-                                        const deadline = new Date(createdAt.getTime() + (PAYMENT_WINDOW_HOURS * 60 * 60 * 1000));
+                                        const deadline = new Date(createdAt.getTime() + (PAYMENT_WINDOW_MINUTES * 60 * 1000));
                                         const now = new Date();
 
                                         const diff = deadline - now;

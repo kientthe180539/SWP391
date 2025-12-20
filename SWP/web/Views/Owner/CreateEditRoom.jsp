@@ -247,9 +247,10 @@
                                                     </c:forEach>
                                                 </select>
                                             </div>
+                                            <input type="hidden" name="status" value="${room.status}"/>
 
                                             <div class="col-md-6">
-                                                <label class="form-label">Current Status</label>
+<!--                                                <label class="form-label">Current Status</label>
                                                 <select name="status" class="form-select">
                                                     <option value="AVAILABLE" ${room.status=='AVAILABLE' ? 'selected'
                                                         : '' }>
@@ -275,7 +276,7 @@
                                                         <option value="MAINTENANCE" ${room.status=='MAINTENANCE'
                                                             ? 'selected' : '' }>
                                                             Maintenance</option>
-                                                </select>
+                                                </select>-->
                                             </div>
 
                                             <div class="col-12">

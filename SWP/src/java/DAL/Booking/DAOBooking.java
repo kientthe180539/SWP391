@@ -82,7 +82,7 @@ public class DAOBooking extends DAO {
     // List Bookings (Advanced)
     // ======================================================
     public List<Booking> getBookings(String search, String status, String sortBy, String sortOrder, int page,
-            int pageSize) {
+                                     int pageSize) {
         List<Booking> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT b.*, c.full_name as customer_name, c.email as customer_email, "
@@ -366,7 +366,7 @@ public class DAOBooking extends DAO {
                 // Auto-assign CHECKOUT Cleaning task
                 DAL.Housekeeping.DAOHousekeeping.INSTANCE.autoAssignTask(bookingId,
                         Model.HousekeepingTask.TaskType.CLEANING, "CHECKOUT",
-                        LocalDate.now());
+                        java.time.LocalDate.now());
             }
             return success;
         } catch (SQLException e) {
@@ -475,6 +475,24 @@ public class DAOBooking extends DAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    // ======================================================
+    // Automated Tasks
+    // ======================================================
+    public int cancelUnpaidBookings(int minutesArg) {
+        // Cancel PENDING bookings created more than 'minutesArg' minutes ago
+        String sql = "UPDATE bookings SET status = 'CANCELLED', updated_at = NOW() "
+                + "WHERE status = 'PENDING' "
+                + "AND created_at < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, minutesArg);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     // Get booking with room details (JOIN query)

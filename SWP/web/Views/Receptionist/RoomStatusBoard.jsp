@@ -195,12 +195,13 @@
                         <div class="logo">🏨 Hotel Management</div>
                         <div class="header-right">
                             <div class="nav-links">
-                                <a href="${pageContext.request.contextPath}/receptionist/dashboard">Dashboard</a>
-                                <a href="${pageContext.request.contextPath}/reservation_approval">Approvals</a>
+                                <a href="${pageContext.request.contextPath}/receptionist/dashboard"
+                                    class="active">Dashboard</a>
                                 <a href="${pageContext.request.contextPath}/receptionist/reservations">Reservations</a>
                                 <a href="${pageContext.request.contextPath}/receptionist/checkinout">Check-in/out</a>
-                                <a href="${pageContext.request.contextPath}/receptionist/room-status"
-                                    class="active">Rooms</a>
+                                <a href="${pageContext.request.contextPath}/receptionist/room-status">Rooms</a>
+                                <a href="${pageContext.request.contextPath}/receptionist/schedule">My Shift</a>
+                                <a href="${pageContext.request.contextPath}/receptionist/profile">Profile</a>
                                 <a href="${pageContext.request.contextPath}/logout">Logout</a>
                             </div>
                             <div class="staff-profile">

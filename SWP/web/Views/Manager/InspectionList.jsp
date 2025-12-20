@@ -20,32 +20,51 @@
                     <div class="container-fluid p-4">
                         <h2 class="mb-4">Recent Inspections</h2>
 
-                        <!-- Search and Filter Row -->
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <form method="GET" class="d-flex">
-                                    <input type="hidden" name="type" value="${typeFilter}">
-                                    <input type="text" class="form-control" name="search"
-                                        placeholder="Search by ID, room, inspector, or note..." value="${searchQuery}">
-                                    <button type="submit" class="btn btn-primary ms-2">
-                                        <i class="bi bi-search"></i> Search
-                                    </button>
-                                    <c:if test="${not empty searchQuery}">
-                                        <a href="?type=${typeFilter}" class="btn btn-secondary ms-2">
-                                            <i class="bi bi-x-circle"></i>
-                                        </a>
-                                    </c:if>
+                        <c:if test="${param.msg == 'success'}">
+                            <c:set var="type" value="success" scope="request" />
+                            <c:set var="mess" value="Inspection has been submitted successfully!" scope="request" />
+                        </c:if>
+                        <jsp:include page="../public/notify.jsp" />
+
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body py-3">
+                                <form method="GET" class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light border-end-0"><i
+                                                    class="bi bi-search"></i></span>
+                                            <input type="text" class="form-control border-start-0" name="search"
+                                                placeholder="Search by ID, room, inspector, or note..."
+                                                value="${searchQuery}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select name="type" class="form-select form-select-sm">
+                                            <option value="ALL">All Inspection Types</option>
+                                            <option value="CHECKIN" ${typeFilter=='CHECKIN' ? 'selected' : '' }>
+                                                Check-in</option>
+                                            <option value="CHECKOUT" ${typeFilter=='CHECKOUT' ? 'selected' : '' }>
+                                                Check-out</option>
+                                            <option value="ROUTINE" ${typeFilter=='ROUTINE' ? 'selected' : '' }>
+                                                Routine</option>
+                                            <option value="SUPPLY" ${typeFilter=='SUPPLY' ? 'selected' : '' }>Supply
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select name="sortBy" class="form-select form-select-sm">
+                                            <option value="inspection_date" ${sortBy=='inspection_date' ? 'selected'
+                                                : '' }>Sort by Date</option>
+                                            <option value="room_id" ${sortBy=='room_id' ? 'selected' : '' }>Sort by
+                                                Room</option>
+                                            <option value="inspector_id" ${sortBy=='inspector_id' ? 'selected' : '' }>
+                                                Sort by Inspector</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
+                                    </div>
                                 </form>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="btn-group w-100">
-                                    <a href="?search=${searchQuery}&type=ALL"
-                                        class="btn btn-sm ${typeFilter == 'ALL' ? 'btn-primary' : 'btn-outline-primary'}">All</a>
-                                    <a href="?search=${searchQuery}&type=CHECKIN"
-                                        class="btn btn-sm ${typeFilter == 'CHECKIN' ? 'btn-success' : 'btn-outline-success'}">Check-in</a>
-                                    <a href="?search=${searchQuery}&type=CHECKOUT"
-                                        class="btn btn-sm ${typeFilter == 'CHECKOUT' ? 'btn-primary' : 'btn-outline-primary'}">Check-out</a>
-                                </div>
                             </div>
                         </div>
 
@@ -79,6 +98,7 @@
                                                         <span
                                                             class="badge ${i.type == 'CHECKIN' ? 'bg-success' : 
                                                                    i.type == 'CHECKOUT' ? 'bg-primary' : 
+                                                                   i.type == 'ROUTINE' ? 'bg-info' :
                                                                    i.type == 'SUPPLY' ? 'bg-warning' : 'bg-secondary'}">
                                                             ${i.type}
                                                         </span>
@@ -113,41 +133,22 @@
                                         inspections.size()} of ${totalInspections} inspections
                                     </div>
                                     <c:if test="${totalPages > 1}">
-                                        <nav>
-                                            <ul class="pagination mb-0">
-                                                <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                        <ul class="pagination pagination-sm mb-0">
+                                            <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                    href="?page=${currentPage - 1}&search=${searchQuery}&type=${typeFilter}&sortBy=${sortBy}">Previous</a>
+                                            </li>
+                                            <c:forEach begin="1" end="${totalPages}" var="p">
+                                                <li class="page-item ${currentPage == p ? 'active' : ''}">
                                                     <a class="page-link"
-                                                        href="?search=${searchQuery}&type=${typeFilter}&page=${currentPage - 1}">
-                                                        <i class="bi bi-chevron-left"></i>
-                                                    </a>
+                                                        href="?page=${p}&search=${searchQuery}&type=${typeFilter}&sortBy=${sortBy}">${p}</a>
                                                 </li>
-
-                                                <c:forEach begin="1" end="${totalPages}" var="i">
-                                                    <c:if
-                                                        test="${i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2)}">
-                                                        <li class="page-item ${currentPage == i ? 'active' : ''}">
-                                                            <a class="page-link"
-                                                                href="?search=${searchQuery}&type=${typeFilter}&page=${i}">${i}</a>
-                                                        </li>
-                                                    </c:if>
-                                                    <c:if test="${i == 2 && currentPage > 4}">
-                                                        <li class="page-item disabled"><span
-                                                                class="page-link">...</span></li>
-                                                    </c:if>
-                                                    <c:if test="${i == totalPages - 1 && currentPage < totalPages - 3}">
-                                                        <li class="page-item disabled"><span
-                                                                class="page-link">...</span></li>
-                                                    </c:if>
-                                                </c:forEach>
-
-                                                <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                                                    <a class="page-link"
-                                                        href="?search=${searchQuery}&type=${typeFilter}&page=${currentPage + 1}">
-                                                        <i class="bi bi-chevron-right"></i>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
+                                            </c:forEach>
+                                            <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                    href="?page=${currentPage + 1}&search=${searchQuery}&type=${typeFilter}&sortBy=${sortBy}">Next</a>
+                                            </li>
+                                        </ul>
                                     </c:if>
                                 </div>
                             </div>

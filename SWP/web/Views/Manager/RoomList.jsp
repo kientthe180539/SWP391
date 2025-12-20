@@ -26,6 +26,59 @@
                         </div>
 
                         <div class="card shadow-sm">
+                            <div class="card-header bg-white py-3">
+                                <form action="<c:url value='/manager/rooms'/>" method="get">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-light border-end-0"><i
+                                                        class="bi bi-search"></i></span>
+                                                <input type="text" name="search" class="form-control border-start-0"
+                                                    placeholder="Search room number..." value="${search}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <select name="status" class="form-select form-select-sm">
+                                                <option value="">All Status</option>
+                                                <option value="AVAILABLE" ${status=='AVAILABLE' ? 'selected' : '' }>
+                                                    Available</option>
+                                                <option value="BOOKED" ${status=='BOOKED' ? 'selected' : '' }>Booked
+                                                </option>
+                                                <option value="OCCUPIED" ${status=='OCCUPIED' ? 'selected' : '' }>
+                                                    Occupied</option>
+                                                <option value="DIRTY" ${status=='DIRTY' ? 'selected' : '' }>Dirty
+                                                </option>
+                                                <option value="CLEANING" ${status=='CLEANING' ? 'selected' : '' }>
+                                                    Cleaning</option>
+                                                <option value="MAINTENANCE" ${status=='MAINTENANCE' ? 'selected' : '' }>
+                                                    Maintenance</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <select name="floor" class="form-select form-select-sm">
+                                                <option value="">All Floors</option>
+                                                <c:forEach begin="1" end="10" var="f">
+                                                    <option value="${f}" ${floor==f ? 'selected' : '' }>Floor ${f}
+                                                    </option>
+                                                </c:forEach>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <select name="sortBy" class="form-select form-select-sm">
+                                                <option value="room_number" ${sortBy=='room_number' ? 'selected' : '' }>
+                                                    Sort by Room</option>
+                                                <option value="floor" ${sortBy=='floor' ? 'selected' : '' }>Sort by
+                                                    Floor</option>
+                                                <option value="status" ${sortBy=='status' ? 'selected' : '' }>Sort by
+                                                    Status</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-hover mb-0 align-middle">
@@ -47,8 +100,8 @@
                                                     <td>
                                                         <span
                                                             class="badge ${r.status == 'AVAILABLE' ? 'bg-success' : 
-                                                                   r.status == 'DIRTY' ? 'bg-danger' : 
-                                                                   r.status == 'CLEANING' ? 'bg-warning' : 'bg-secondary'}">
+                                                               r.status == 'DIRTY' ? 'bg-danger' : 
+                                                               r.status == 'CLEANING' ? 'bg-warning' : 'bg-secondary'}">
                                                             ${r.status}
                                                         </span>
                                                     </td>
@@ -64,9 +117,40 @@
                                                     </td>
                                                 </tr>
                                             </c:forEach>
+                                            <c:if test="${empty rooms}">
+                                                <tr>
+                                                    <td colspan="5" class="text-center py-5 text-muted">
+                                                        <i class="bi bi-door-open fs-1 d-block mb-2"></i>
+                                                        No rooms found.
+                                                    </td>
+                                                </tr>
+                                            </c:if>
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                            <div class="card-footer bg-white py-3">
+                                <nav class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Showing ${rooms.size()} of ${totalRooms} rooms</small>
+                                    <c:if test="${totalPages > 1}">
+                                        <ul class="pagination pagination-sm mb-0">
+                                            <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                    href="?page=${currentPage - 1}&search=${search}&status=${status}&floor=${floor}&sortBy=${sortBy}">Previous</a>
+                                            </li>
+                                            <c:forEach begin="1" end="${totalPages}" var="p">
+                                                <li class="page-item ${currentPage == p ? 'active' : ''}">
+                                                    <a class="page-link"
+                                                        href="?page=${p}&search=${search}&status=${status}&floor=${floor}&sortBy=${sortBy}">${p}</a>
+                                                </li>
+                                            </c:forEach>
+                                            <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                    href="?page=${currentPage + 1}&search=${search}&status=${status}&floor=${floor}&sortBy=${sortBy}">Next</a>
+                                            </li>
+                                        </ul>
+                                    </c:if>
+                                </nav>
                             </div>
                         </div>
                     </div>

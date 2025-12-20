@@ -12,19 +12,18 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 public class HomePageController extends HttpServlet {
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-//        request.setAttribute("type", "success");
-//        request.setAttribute("mess", "Thao tác thành công!");
-//        request.setAttribute("href", "home");
-        request.getRequestDispatcher("Views/HomePage/HomePage.jsp").forward(request, response);
-    }
+        @Override
+        protected void doGet(HttpServletRequest request, HttpServletResponse response)
+                        throws ServletException, IOException {
+                java.util.List<Model.RoomType> roomTypes = DAL.Guest.DAOGuest.INSTANCE.getAllRoomTypes();
+                request.setAttribute("roomTypes", roomTypes);
+                request.getRequestDispatcher("Views/HomePage/HomePage.jsp").forward(request, response);
+        }
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+        @Override
+        protected void doPost(HttpServletRequest request, HttpServletResponse response)
+                        throws ServletException, IOException {
 
-    }
+        }
 
 }

@@ -42,12 +42,10 @@
                             </div>
 
                             <c:if test="${not empty param.msg}">
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                    Inspection submitted successfully!
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                        aria-label="Close"></button>
-                                </div>
+                                <c:set var="type" value="success" scope="request" />
+                                <c:set var="mess" value="Inspection submitted successfully!" scope="request" />
                             </c:if>
+                            <jsp:include page="../public/notify.jsp" />
 
                             <div class="card border-0 shadow-sm">
                                 <div class="card-body p-0">
@@ -60,7 +58,7 @@
                                                         <th>Room</th>
                                                     </c:if>
                                                     <th>Type</th>
-                                                    <th>Inspector ID</th>
+                                                    <th>Inspector</th>
                                                     <th>Note</th>
                                                     <th class="text-end pe-4">Details</th>
                                                 </tr>
@@ -85,11 +83,12 @@
                                                             </td>
                                                         </c:if>
                                                         <td><span class="badge bg-info">${h.type}</span></td>
-                                                        <td>${h.inspectorId}</td>
+                                                        <td>${not empty h.inspectorName ? h.inspectorName :
+                                                            h.inspectorId}</td>
                                                         <td>${h.note}</td>
                                                         <td class="text-end pe-4">
-                                                            <button class="btn btn-sm btn-outline-secondary"
-                                                                disabled>View</button>
+                                                            <a href="inspection-detail?id=${h.inspectionId}&source=${param.source}"
+                                                                class="btn btn-sm btn-outline-primary">View</a>
                                                         </td>
                                                     </tr>
                                                 </c:forEach>

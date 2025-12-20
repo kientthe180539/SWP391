@@ -7,7 +7,7 @@
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Hồ Sơ Khách Hàng - Quản Lí Khách Sạn</title>
+                <title>Customer Profile - Hotel Management</title>
                 <link rel="stylesheet" href="${pageContext.request.contextPath}/CSS/Customer/profile.css">
             </head>
 
@@ -23,7 +23,7 @@
                                 <!-- Back Button -->
                                 <div class="back-home">
                                     <a href="${pageContext.request.contextPath}/home" class="btn btn-secondary">
-                                        ← Quay về trang chủ
+                                        ← Back to home
                                     </a>
                                 </div>
                                 <div class="profile-avatar">
@@ -31,38 +31,37 @@
                                 </div>
                                 <div class="profile-info">
                                     <h1>${sessionScope.currentUser.fullName}</h1>
-                                    <span class="member-level">⭐ Khách Hàng</span>
+                                    <span class="member-level">⭐ Customer</span>
                                     <p><strong>Email:</strong> ${sessionScope.currentUser.email != null ?
-                                        sessionScope.currentUser.email : 'Chưa cập nhật'}</p>
-                                    <p><strong>Số Điện Thoại:</strong> ${sessionScope.currentUser.phone != null ?
-                                        sessionScope.currentUser.phone : 'Chưa cập nhật'}</p>
+                                        sessionScope.currentUser.email : 'Not updated'}</p>
+                                    <p><strong>Phone:</strong> ${sessionScope.currentUser.phone != null ?
+                                        sessionScope.currentUser.phone : 'Not updated'}</p>
                                     <p><strong>Username:</strong> ${sessionScope.currentUser.username}</p>
                                     <c:if test="${sessionScope.currentUser.createdAt != null}">
-                                        <p><strong>Thành Viên Từ:</strong>
+                                        <p><strong>Member Since:</strong>
                                             ${sessionScope.currentUser.createdAt.toLocalDate()}</p>
                                     </c:if>
                                     <div class="profile-actions">
-                                        <button class="btn btn-primary" onclick="openEditModal()">Chỉnh Sửa Thông
-                                            Tin</button>
-                                        <button class="btn btn-secondary" onclick="openPasswordModal()">Đổi Mật
-                                            Khẩu</button>
+                                        <button class="btn btn-primary" onclick="openEditModal()">Edit Profile</button>
+                                        <button class="btn btn-secondary" onclick="openPasswordModal()">Change
+                                            Password</button>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Tabs -->
                             <div class="tabs">
-                                <button class="tab active" onclick="switchTab(event, 'personal-info')">Thông Tin Cá
-                                    Nhân</button>
-                                <button class="tab" onclick="switchTab(event, 'booking-history')">Lịch Sử Đặt
-                                    Phòng</button>
+                                <button class="tab active" onclick="switchTab(event, 'personal-info')">Personal
+                                    Info</button>
+                                <button class="tab" onclick="switchTab(event, 'booking-history')">Booking
+                                    History</button>
                             </div>
 
                             <!-- Personal Information Tab -->
                             <div id="personal-info" class="tab-content active">
                                 <div class="info-section">
                                     <div class="section-title">
-                                        Thông Tin Cơ Bản
+                                        Basic Information
                                     </div>
                                     <div class="info-grid">
                                         <div class="info-item">
@@ -70,33 +69,32 @@
                                             <div class="info-value">${sessionScope.currentUser.username}</div>
                                         </div>
                                         <div class="info-item">
-                                            <div class="info-label">Họ & Tên</div>
+                                            <div class="info-label">Full Name</div>
                                             <div class="info-value">${sessionScope.currentUser.fullName}</div>
                                         </div>
                                         <div class="info-item">
                                             <div class="info-label">Email</div>
                                             <div class="info-value">
                                                 ${sessionScope.currentUser.email != null ?
-                                                sessionScope.currentUser.email : 'Chưa cập nhật'}
+                                                sessionScope.currentUser.email : 'Not updated'}
                                             </div>
                                         </div>
                                         <div class="info-item">
-                                            <div class="info-label">Số Điện Thoại</div>
+                                            <div class="info-label">Phone</div>
                                             <div class="info-value">
                                                 ${sessionScope.currentUser.phone != null ?
-                                                sessionScope.currentUser.phone : 'Chưa cập nhật'}
+                                                sessionScope.currentUser.phone : 'Not updated'}
                                             </div>
                                         </div>
                                         <div class="info-item">
-                                            <div class="info-label">Trạng Thái Tài Khoản</div>
+                                            <div class="info-label">Account Status</div>
                                             <div class="info-value">
                                                 <c:choose>
                                                     <c:when test="${sessionScope.currentUser.active}">
-                                                        <span style="color: green; font-weight: 600;">✓ Đang hoạt
-                                                            động</span>
+                                                        <span style="color: green; font-weight: 600;">✓ Active</span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <span style="color: red; font-weight: 600;">✗ Bị khóa</span>
+                                                        <span style="color: red; font-weight: 600;">✗ Locked</span>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </div>
@@ -108,9 +106,9 @@
                             <!-- Booking History Tab -->
                             <div id="booking-history" class="tab-content">
                                 <div class="info-section">
-                                    <div class="section-title">Lịch Sử Đặt Phòng</div>
+                                    <div class="section-title">Booking History</div>
                                     <p style="text-align: center; padding: 40px 20px; color: #64748b; font-size: 16px;">
-                                        📅 Xem lịch sử đặt phòng chi tiết tại trang
+                                        📅 View detailed booking history at the
                                         <a href="${pageContext.request.contextPath}/my_booking"
                                             style="color: #2980b9; font-weight: 600; text-decoration: none;">My
                                             Booking</a>
@@ -123,14 +121,14 @@
                         <div id="editModal" class="modal">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h2>Chỉnh Sửa Thông Tin</h2>
+                                    <h2>Edit Profile</h2>
                                     <button class="close-btn" onclick="closeEditModal()">×</button>
                                 </div>
                                 <form method="post" action="${pageContext.request.contextPath}/customer/profile">
                                     <input type="hidden" name="action" value="update_profile">
 
                                     <div class="form-group">
-                                        <label>Họ & Tên <span style="color: red;">*</span></label>
+                                        <label>Full Name <span style="color: red;">*</span></label>
                                         <input type="text" name="fullName" value="${sessionScope.currentUser.fullName}"
                                             required>
                                     </div>
@@ -141,15 +139,15 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Số Điện Thoại <span style="color: red;">*</span></label>
+                                        <label>Phone <span style="color: red;">*</span></label>
                                         <input type="tel" name="phone" value="${sessionScope.currentUser.phone}"
                                             placeholder="0912345678">
                                     </div>
 
                                     <div class="modal-actions">
                                         <button type="button" class="btn btn-secondary"
-                                            onclick="closeEditModal()">Hủy</button>
-                                        <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                                            onclick="closeEditModal()">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Save Changes</button>
                                     </div>
                                 </form>
                             </div>
@@ -159,33 +157,33 @@
                         <div id="passwordModal" class="modal">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h2>Đổi Mật Khẩu</h2>
+                                    <h2>Change Password</h2>
                                     <button class="close-btn" onclick="closePasswordModal()">×</button>
                                 </div>
                                 <form method="post" action="${pageContext.request.contextPath}/customer/profile">
                                     <input type="hidden" name="action" value="change_password">
 
                                     <div class="form-group">
-                                        <label>Mật Khẩu Hiện Tại <span style="color: red;">*</span></label>
+                                        <label>Current Password <span style="color: red;">*</span></label>
                                         <input type="password" name="currentPassword" required minlength="6">
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Mật Khẩu Mới <span style="color: red;">*</span></label>
+                                        <label>New Password <span style="color: red;">*</span></label>
                                         <input type="password" name="newPassword" id="newPassword" required
                                             minlength="6">
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Xác Nhận Mật Khẩu Mới <span style="color: red;">*</span></label>
+                                        <label>Confirm New Password <span style="color: red;">*</span></label>
                                         <input type="password" name="confirmPassword" id="confirmPassword" required
                                             minlength="6">
                                     </div>
 
                                     <div class="modal-actions">
                                         <button type="button" class="btn btn-secondary"
-                                            onclick="closePasswordModal()">Hủy</button>
-                                        <button type="submit" class="btn btn-primary">Đổi Mật Khẩu</button>
+                                            onclick="closePasswordModal()">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Change Password</button>
                                     </div>
                                 </form>
                             </div>
@@ -245,7 +243,7 @@
 
                                     if (newPass !== confirmPass) {
                                         e.preventDefault();
-                                        alert('Mật khẩu mới và xác nhận mật khẩu không khớp!');
+                                        alert('New password and confirmation do not match!');
                                     }
                                 });
                             </script>

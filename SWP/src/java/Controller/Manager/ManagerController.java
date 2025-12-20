@@ -18,8 +18,9 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet(name = "ManagerController", urlPatterns = { "/manager/dashboard", "/manager/create-task",
         "/manager/issues", "/manager/rooms", "/manager/room-detail", "/manager/staff", "/manager/inspections",
         "/manager/create-inspection", "/manager/replenishment-requests", "/manager/bookings",
-        "/manager/housekeeping", "/manager/reports", "/manager/inspection-detail",
-        "/manager/add-room-amenity", "/manager/delete-room-amenity", "/manager/edit-room-amenity" })
+        "/manager/reports", "/manager/inspection-detail", "/manager/all-tasks",
+        "/manager/add-room-amenity", "/manager/delete-room-amenity", "/manager/edit-room-amenity",
+        "/manager/schedule" })
 public class ManagerController extends HttpServlet {
 
     @Override
@@ -45,7 +46,9 @@ public class ManagerController extends HttpServlet {
             case "/manager/create-inspection" -> showCreateInspectionForm(request, response);
             case "/manager/replenishment-requests" -> showReplenishmentRequests(request, response);
             case "/manager/bookings" -> showBookings(request, response);
-            case "/manager/housekeeping" -> showHousekeeping(request, response);
+            case "/manager/all-tasks" -> showAllTasks(request, response);
+            case "/manager/schedule" -> showSchedule(request, response);
+
             case "/manager/reports" -> showReports(request, response);
             default -> response.sendError(404);
         }
@@ -155,6 +158,18 @@ public class ManagerController extends HttpServlet {
         }
     }
 
+    private void showSchedule(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // Permanent Schedule View
+        List<Model.StaffAssignment> assignments = DAL.Owner.DAOOwner.INSTANCE.getAllCurrentAssignments();
+
+        request.setAttribute("assignments", assignments);
+        // Date is no longer central, but we can pass today for display if needed
+        request.setAttribute("date", LocalDate.now());
+        request.getRequestDispatcher("/Views/Shared/ViewSchedule.jsp").forward(request, response);
+    }
+
     private void showDashboard(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Reuse Housekeeping DAO for room stats for now
@@ -238,6 +253,10 @@ public class ManagerController extends HttpServlet {
     private void showIssues(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String pageStr = request.getParameter("page");
+        String search = request.getParameter("search");
+        String status = request.getParameter("status");
+        String type = request.getParameter("type");
+        String sortBy = request.getParameter("sortBy");
 
         // Pagination settings
         int page = 1;
@@ -252,24 +271,19 @@ public class ManagerController extends HttpServlet {
             page = 1;
         }
 
-        List<IssueReport> allIssues = DAOManager.INSTANCE.getAllIssues();
-
-        // Calculate pagination
-        int totalIssues = allIssues.size();
+        List<IssueReport> issues = DAOManager.INSTANCE.getIssues(search, status, type, sortBy, page, pageSize);
+        int totalIssues = DAOManager.INSTANCE.countIssues(search, status, type);
         int totalPages = (int) Math.ceil((double) totalIssues / pageSize);
-        if (page > totalPages && totalPages > 0)
-            page = totalPages;
-
-        int startIndex = (page - 1) * pageSize;
-        int endIndex = Math.min(startIndex + pageSize, totalIssues);
-
-        List<IssueReport> issues = allIssues.subList(startIndex, endIndex);
 
         request.setAttribute("issues", issues);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalIssues", totalIssues);
-        request.setAttribute("pageSize", pageSize);
+
+        request.setAttribute("search", search);
+        request.setAttribute("status", status);
+        request.setAttribute("type", type);
+        request.setAttribute("sortBy", sortBy);
 
         request.getRequestDispatcher("/Views/Manager/IssueList.jsp").forward(request, response);
     }
@@ -347,6 +361,7 @@ public class ManagerController extends HttpServlet {
         String pageStr = request.getParameter("page");
         String searchQuery = request.getParameter("search");
         String typeFilter = request.getParameter("type");
+        String sortBy = request.getParameter("sortBy");
 
         // Pagination settings
         int page = 1;
@@ -361,48 +376,15 @@ public class ManagerController extends HttpServlet {
             page = 1;
         }
 
-        // Get all recent inspections (last 200)
-        List<Model.RoomInspection> allInspections = inspectionDAO.getRecentInspections(200);
-
-        // Apply type filter
-        if (typeFilter != null && !typeFilter.isBlank() && !"ALL".equals(typeFilter)) {
-            final String filterType = typeFilter;
-            allInspections = allInspections.stream()
-                    .filter(i -> filterType.equalsIgnoreCase(String.valueOf(i.getType())))
-                    .collect(java.util.stream.Collectors.toList());
-        } else {
-            // Default: Show only CHECKIN and CHECKOUT
-            allInspections = allInspections.stream()
-                    .filter(i -> "CHECKIN".equalsIgnoreCase(String.valueOf(i.getType())) ||
-                            "CHECKOUT".equalsIgnoreCase(String.valueOf(i.getType())))
-                    .collect(java.util.stream.Collectors.toList());
-        }
-
-        // Apply search filter
-        if (searchQuery != null && !searchQuery.isBlank()) {
-            String query = searchQuery.toLowerCase().trim();
-            allInspections = allInspections.stream()
-                    .filter(i -> String.valueOf(i.getInspectionId()).contains(query) ||
-                            (i.getRoomNumber() != null && i.getRoomNumber().toLowerCase().contains(query)) ||
-                            (i.getNote() != null && i.getNote().toLowerCase().contains(query)) ||
-                            (i.getInspectorName() != null && i.getInspectorName().toLowerCase().contains(query)))
-                    .collect(java.util.stream.Collectors.toList());
-        }
-
-        // Calculate pagination
-        int totalInspections = allInspections.size();
+        List<Model.RoomInspection> inspections = inspectionDAO.getInspections(typeFilter, searchQuery, sortBy, page,
+                pageSize);
+        int totalInspections = inspectionDAO.countInspections(typeFilter, searchQuery);
         int totalPages = (int) Math.ceil((double) totalInspections / pageSize);
-        if (page > totalPages && totalPages > 0)
-            page = totalPages;
-
-        int startIndex = (page - 1) * pageSize;
-        int endIndex = Math.min(startIndex + pageSize, totalInspections);
-
-        List<Model.RoomInspection> inspections = allInspections.subList(startIndex, endIndex);
 
         request.setAttribute("inspections", inspections);
         request.setAttribute("searchQuery", searchQuery != null ? searchQuery : "");
         request.setAttribute("typeFilter", typeFilter != null ? typeFilter : "ALL");
+        request.setAttribute("sortBy", sortBy != null ? sortBy : "");
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalInspections", totalInspections);
@@ -430,27 +412,27 @@ public class ManagerController extends HttpServlet {
         User currentUser = (User) request.getSession().getAttribute("currentUser");
 
         String roomIdStr = request.getParameter("roomId");
-        String bookingIdStr = request.getParameter("bookingId");
+
         String inspectionType = request.getParameter("inspectionType");
         String assignedToStr = request.getParameter("assignedTo");
+        String taskDateStr = request.getParameter("taskDate");
         String note = request.getParameter("note");
 
         try {
             int roomId = Integer.parseInt(roomIdStr);
             int assignedTo = Integer.parseInt(assignedToStr);
+            LocalDate taskDate = (taskDateStr != null && !taskDateStr.isBlank())
+                    ? LocalDate.parse(taskDateStr)
+                    : LocalDate.now();
 
             // Create a housekeeping task for the inspection
             HousekeepingTask.TaskType taskType = HousekeepingTask.TaskType.INSPECTION;
             String taskNote = "[" + inspectionType + "] " + (note != null ? note : "");
 
-            if (bookingIdStr != null && !bookingIdStr.isBlank()) {
-                taskNote += " (Booking #" + bookingIdStr + ")";
-            }
-
             boolean ok = DAOHousekeeping.INSTANCE.createTask(
                     roomId,
                     assignedTo,
-                    LocalDate.now(),
+                    taskDate,
                     taskType,
                     taskNote,
                     currentUser.getUserId());
@@ -467,7 +449,7 @@ public class ManagerController extends HttpServlet {
             request.setAttribute("mess", "Invalid data: " + e.getMessage());
         }
 
-        showCreateInspectionForm(request, response);
+        showCreateTaskForm(request, response);
     }
 
     private void showReplenishmentRequests(HttpServletRequest request, HttpServletResponse response)
@@ -576,77 +558,14 @@ public class ManagerController extends HttpServlet {
             sortOrder = "DESC";
         }
 
-        List<Model.Booking> allBookings;
-        if (statusFilter != null && !statusFilter.isBlank() && !"ALL".equals(statusFilter)) {
-            allBookings = bookingDAO.getBookingsByStatus(Model.Booking.Status.valueOf(statusFilter));
-        } else {
-            allBookings = bookingDAO.getAllBookings();
-        }
-
-        // Apply search filter
-        if (searchQuery != null && !searchQuery.isBlank()) {
-            String query = searchQuery.toLowerCase().trim();
-            allBookings = allBookings.stream()
-                    .filter(b -> String.valueOf(b.getBookingId()).contains(query) ||
-                            (b.getCustomer() != null && b.getCustomer().getFullName() != null &&
-                                    b.getCustomer().getFullName().toLowerCase().contains(query))
-                            ||
-                            (b.getCustomer() != null && b.getCustomer().getEmail() != null &&
-                                    b.getCustomer().getEmail().toLowerCase().contains(query))
-                            ||
-                            (b.getRoom() != null && b.getRoom().getRoomNumber() != null &&
-                                    b.getRoom().getRoomNumber().toLowerCase().contains(query)))
-                    .collect(java.util.stream.Collectors.toList());
-        }
-
-        // Apply sorting
-        java.util.Comparator<Model.Booking> comparator = null;
-        switch (sortBy) {
-            case "booking_id":
-                comparator = java.util.Comparator.comparing(Model.Booking::getBookingId);
-                break;
-            case "customer":
-                comparator = java.util.Comparator.comparing(
-                        b -> b.getCustomer() != null ? b.getCustomer().getFullName() : "",
-                        String.CASE_INSENSITIVE_ORDER);
-                break;
-            case "room":
-                comparator = java.util.Comparator.comparing(b -> b.getRoom() != null ? b.getRoom().getRoomNumber() : "",
-                        String.CASE_INSENSITIVE_ORDER);
-                break;
-            case "checkin_date":
-                comparator = java.util.Comparator.comparing(Model.Booking::getCheckinDate);
-                break;
-            case "checkout_date":
-                comparator = java.util.Comparator.comparing(Model.Booking::getCheckoutDate);
-                break;
-            case "status":
-                comparator = java.util.Comparator.comparing(b -> b.getStatus().toString());
-                break;
-            case "total_amount":
-                comparator = java.util.Comparator.comparing(Model.Booking::getTotalAmount);
-                break;
-            default: // created_at
-                comparator = java.util.Comparator
-                        .comparing(b -> b.getCreatedAt() != null ? b.getCreatedAt() : java.time.LocalDateTime.MIN);
-                break;
-        }
-
-        if ("DESC".equalsIgnoreCase(sortOrder)) {
-            comparator = comparator.reversed();
-        }
-        allBookings.sort(comparator);
-
-        // Calculate pagination
-        int totalBookings = allBookings.size();
+        // Fetch filtered, sorted, paginated list from DAO
+        List<Model.Booking> bookings = bookingDAO.getBookings(searchQuery, statusFilter, sortBy, sortOrder, page,
+                pageSize);
+        int totalBookings = bookingDAO.countBookings(searchQuery, statusFilter);
         int totalPages = (int) Math.ceil((double) totalBookings / pageSize);
-        if (page > totalPages && totalPages > 0)
-            page = totalPages;
 
-        int startIndex = (page - 1) * pageSize;
-        int endIndex = Math.min(startIndex + pageSize, totalBookings);
-
-        List<Model.Booking> bookings = allBookings.subList(startIndex, endIndex);
+        // Check which bookings have assigned tasks (to hide assign buttons)
+        /* Logic continues below... subList replaced by 'bookings' */
 
         // Check which bookings have assigned tasks (to hide assign buttons)
         java.util.Map<Integer, Boolean> hasCheckinTask = new java.util.HashMap<>();
@@ -693,10 +612,17 @@ public class ManagerController extends HttpServlet {
         String bookingIdStr = request.getParameter("bookingId");
         String inspectionType = request.getParameter("inspectionType");
         String assignedToStr = request.getParameter("assignedTo");
+        String scheduledDateStr = request.getParameter("scheduledDate");
 
         try {
             int bookingId = Integer.parseInt(bookingIdStr);
             int assignedTo = Integer.parseInt(assignedToStr);
+
+            // Parse scheduled date - default to today if not provided
+            LocalDate scheduledDate = LocalDate.now();
+            if (scheduledDateStr != null && !scheduledDateStr.isBlank()) {
+                scheduledDate = LocalDate.parse(scheduledDateStr);
+            }
 
             // Get booking details
             DAL.Booking.DAOBooking bookingDAO = DAL.Booking.DAOBooking.INSTANCE;
@@ -713,19 +639,19 @@ public class ManagerController extends HttpServlet {
                 inspectionOk = DAOHousekeeping.INSTANCE.createTask(
                         booking.getRoomId(),
                         assignedTo,
-                        LocalDate.now(),
+                        scheduledDate,
                         inspectionTaskType,
                         inspectionNote,
                         currentUser.getUserId());
 
-                // Create CLEANING task for the same staff member
+                // Create CLEANING task for the same staff member (same scheduled date)
                 HousekeepingTask.TaskType cleaningTaskType = HousekeepingTask.TaskType.CLEANING;
                 String cleaningNote = "Cleaning for Booking #" + bookingId + " (Room " + booking.getRoomId() + ")";
 
                 cleaningOk = DAOHousekeeping.INSTANCE.createTask(
                         booking.getRoomId(),
                         assignedTo,
-                        LocalDate.now(),
+                        scheduledDate,
                         cleaningTaskType,
                         cleaningNote,
                         currentUser.getUserId());
@@ -742,41 +668,194 @@ public class ManagerController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/manager/bookings?error=true");
     }
 
-    private void showHousekeeping(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        // Reuse logic from HousekeepingController's dashboard or list
-        // For Manager, maybe show the Cleaning Task List view but with more options?
-        // Or just the Dashboard view?
-        // The user request says: "Housekeeping Dashboard", "Cleaning Task List",
-        // "Update Supplies"
-        // Let's forward to a Manager-specific Housekeeping dashboard which links to
-        // others.
-        // Or reuse Housekeeping Dashboard.jsp if it works for Manager (it checks role).
-        // Sidebar.jsp checks role, so we might need a Manager version or make Sidebar
-        // dynamic.
-        // I'll create Views/Manager/Housekeeping.jsp which acts as a dashboard/landing.
-
-        // Fetch data for dashboard
-        LocalDate today = LocalDate.now();
-        List<Room> roomsNeedCleaning = DAOHousekeeping.INSTANCE.getRoomsNeedingCleaning();
-        // Maybe all tasks for today?
-        List<HousekeepingTask> todayTasks = DAOHousekeeping.INSTANCE.getTasks(0, today, null, null); // 0 for all staff?
-                                                                                                     // Need to check
-                                                                                                     // DAO.
-        // DAO getTasks checks assigned_to = ?
-        // I need a method to get ALL tasks.
-        // DAOHousekeeping.getTasks filters by assigned_to.
-        // I might need to add a method to DAO or just show rooms for now.
-
-        request.setAttribute("roomsNeedCleaning", roomsNeedCleaning);
-        request.setAttribute("today", today);
-
-        request.getRequestDispatcher("/Views/Manager/Housekeeping.jsp").forward(request, response);
-    }
-
     private void showReports(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Placeholder for Reports
+        DAOHousekeeping hkDao = DAOHousekeeping.INSTANCE;
+        DAOManager mgrDao = DAOManager.INSTANCE;
+
+        // Task Statistics
+        // Task Statistics
+        int totalTasks = DAOHousekeeping.INSTANCE.countTasks(0, null, null, null, null, null, null);
+        int newTasks = DAOHousekeeping.INSTANCE.countTasks(0, null, null, "NEW", null, null, null);
+        int inProgressTasks = DAOHousekeeping.INSTANCE.countTasks(0, null, null, "IN_PROGRESS", null, null, null);
+        int completedTasks = DAOHousekeeping.INSTANCE.countTasks(0, null, null, "DONE", null, null, null);
+
+        // Task by Type
+        int cleaningTasks = DAOHousekeeping.INSTANCE.countTasks(0, null, null, null, null, "CLEANING", null);
+        int inspectionTasks = DAOHousekeeping.INSTANCE.countTasks(0, null, null, null, null, "INSPECTION_ALL", null);
+
+        // Map these to request attributes expected by Reports.jsp
+        request.setAttribute("countAll", totalTasks);
+        request.setAttribute("countNew", newTasks);
+        request.setAttribute("countInProgress", inProgressTasks);
+        request.setAttribute("countDone", completedTasks);
+        request.setAttribute("countCleaning", cleaningTasks);
+        request.setAttribute("countInspection", inspectionTasks);
+
+        // Room Statistics
+        List<Room> allRooms = hkDao.getAllRooms();
+        int totalRooms = allRooms.size();
+        int availableRooms = 0;
+        int occupiedRooms = 0;
+        int dirtyRooms = 0;
+        int maintenanceRooms = 0;
+
+        for (Room r : allRooms) {
+            switch (r.getStatus()) {
+                case AVAILABLE -> availableRooms++;
+                case OCCUPIED, BOOKED -> occupiedRooms++;
+                case DIRTY, CLEANING -> dirtyRooms++;
+                case MAINTENANCE -> maintenanceRooms++;
+                default -> {
+                }
+            }
+        }
+
+        // Issue Statistics
+        List<IssueReport> allIssues = mgrDao.getAllIssues();
+        int totalIssues = allIssues.size();
+        int newIssues = 0;
+        int resolvedIssues = 0;
+
+        for (IssueReport i : allIssues) {
+            if (i.getStatus() == IssueReport.IssueStatus.NEW)
+                newIssues++;
+            if (i.getStatus() == IssueReport.IssueStatus.RESOLVED)
+                resolvedIssues++;
+        }
+
+        // Staff Statistics
+        List<User> staff = hkDao.getHousekeepingStaff();
+        int totalStaff = staff.size();
+
+        // Set attributes
+        request.setAttribute("totalTasks", totalTasks); // These attributes are no longer set directly from hkDao calls,
+                                                        // but the instruction doesn't remove them.
+        request.setAttribute("newTasks", newTasks); // Keeping them as per instruction to only make specified changes.
+        request.setAttribute("inProgressTasks", inProgressTasks);
+        request.setAttribute("completedTasks", completedTasks);
+        request.setAttribute("cleaningTasks", cleaningTasks);
+        request.setAttribute("inspectionTasks", inspectionTasks);
+
+        request.setAttribute("totalRooms", totalRooms);
+        request.setAttribute("availableRooms", availableRooms);
+        request.setAttribute("occupiedRooms", occupiedRooms);
+        request.setAttribute("dirtyRooms", dirtyRooms);
+        request.setAttribute("maintenanceRooms", maintenanceRooms);
+
+        request.setAttribute("totalIssues", totalIssues);
+        request.setAttribute("newIssues", newIssues);
+        request.setAttribute("resolvedIssues", resolvedIssues);
+
+        request.setAttribute("totalStaff", totalStaff);
+
+        // Completion rate
+        double completionRate = totalTasks > 0 ? (completedTasks * 100.0 / totalTasks) : 0;
+        request.setAttribute("completionRate", String.format("%.1f", completionRate));
+
+        // Occupancy rate
+        double occupancyRate = totalRooms > 0 ? (occupiedRooms * 100.0 / totalRooms) : 0;
+        request.setAttribute("occupancyRate", String.format("%.1f", occupancyRate));
+
         request.getRequestDispatcher("/Views/Manager/Reports.jsp").forward(request, response);
+    }
+
+    private void showAllTasks(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // Filter params
+        String staffIdStr = request.getParameter("staffId");
+        String dateFromStr = request.getParameter("dateFrom");
+        String dateToStr = request.getParameter("dateTo");
+        String statusStr = request.getParameter("status");
+        String taskTypeStr = request.getParameter("type");
+        String searchQuery = request.getParameter("search");
+        String pageStr = request.getParameter("page");
+        String sortBy = request.getParameter("sortBy");
+        String sortOrder = request.getParameter("sortOrder");
+
+        // Defaults
+        int staffId = 0;
+        if (staffIdStr != null && !staffIdStr.isBlank()) {
+            try {
+                staffId = Integer.parseInt(staffIdStr);
+            } catch (Exception e) {
+            }
+        }
+
+        LocalDate dateFrom = null;
+        if (dateFromStr != null && !dateFromStr.isBlank()) {
+            try {
+                dateFrom = LocalDate.parse(dateFromStr);
+            } catch (Exception e) {
+            }
+        }
+
+        LocalDate dateTo = null;
+        if (dateToStr != null && !dateToStr.isBlank()) {
+            try {
+                dateTo = LocalDate.parse(dateToStr);
+            } catch (Exception e) {
+            }
+        }
+
+        // Pagination
+        int page = 1;
+        int pageSize = 10;
+        try {
+            if (pageStr != null && !pageStr.isBlank()) {
+                page = Integer.parseInt(pageStr);
+                if (page < 1)
+                    page = 1;
+            }
+        } catch (NumberFormatException e) {
+            page = 1;
+        }
+
+        DAOHousekeeping dao = DAOHousekeeping.INSTANCE;
+
+        // Get Tasks
+        String search = searchQuery; // Renamed for clarity in the new method call
+        String dbTaskType = taskTypeStr; // Renamed for clarity in the new method call
+        List<HousekeepingTask> tasks = DAOHousekeeping.INSTANCE.getTasks(
+                staffId, dateFrom, dateTo, statusStr, search, dbTaskType, sortBy, sortOrder, page, pageSize, null);
+        int totalTasks = DAOHousekeeping.INSTANCE.countTasks(staffId, dateFrom, dateTo, statusStr, search, dbTaskType,
+                null); // Pass null instead of creatorRoleIdStr);
+        int totalPages = (int) Math.ceil((double) totalTasks / pageSize);
+
+        // Get auxiliary data for filters
+        List<User> staffList = dao.getHousekeepingStaff();
+        // We might want rooms too if we filter by room, but search covers it.
+
+        request.setAttribute("tasks", tasks);
+        request.setAttribute("staffList", staffList);
+
+        String selectedStaffName = "";
+        if (staffId > 0) {
+            for (User u : staffList) {
+                if (u.getUserId() == staffId) {
+                    selectedStaffName = u.getFullName();
+                    break;
+                }
+            }
+        }
+        request.setAttribute("selectedStaffName", selectedStaffName);
+
+        // Set attributes for form retention
+        request.setAttribute("staffId", staffId);
+        request.setAttribute("dateFrom", dateFrom);
+        request.setAttribute("dateTo", dateTo);
+        request.setAttribute("status", statusStr);
+        request.setAttribute("type", taskTypeStr);
+        request.setAttribute("search", searchQuery);
+        request.setAttribute("sortBy", sortBy);
+        request.setAttribute("sortOrder", sortOrder);
+
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalTasks", totalTasks);
+        request.setAttribute("pageSize", pageSize);
+
+        request.getRequestDispatcher("/Views/Manager/AllTasks.jsp").forward(request, response);
     }
 }

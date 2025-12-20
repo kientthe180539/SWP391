@@ -2,6 +2,7 @@ package Controller.Receptionist;
 
 import DAL.Receptionist.DAOReceptionist;
 import Model.User;
+import Model.StaffAssignment;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -15,7 +16,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet(name = "ReceptionistController", urlPatterns = {
         "/receptionist/dashboard",
-        "/receptionist/reservations"
+        "/receptionist/reservations",
+        "/receptionist/schedule"
 })
 public class ReceptionistController extends HttpServlet {
 
@@ -51,6 +53,8 @@ public class ReceptionistController extends HttpServlet {
                 showDashboard(request, response);
             case "/receptionist/reservations" ->
                 showReservationList(request, response);
+            case "/receptionist/schedule" ->
+                showSchedule(request, response);
             default ->
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -141,6 +145,16 @@ public class ReceptionistController extends HttpServlet {
                 .forward(request, response);
     }
 
+    private void showSchedule(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // Permanent Schedule View
+        List<StaffAssignment> assignments = DAL.Owner.DAOOwner.INSTANCE.getAllCurrentAssignments();
+
+        request.setAttribute("assignments", assignments);
+        request.setAttribute("date", LocalDate.now());
+        request.getRequestDispatcher("/Views/Shared/ViewSchedule.jsp").forward(request, response);
+    }
 
     @Override
     public String getServletInfo() {

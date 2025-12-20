@@ -42,7 +42,7 @@ public class BookingController extends HttpServlet {
                     return;
                 }
 
-                // Đã đăng nhập -> lấy thông tin phòng
+                // User logged in -> get room info
                 String roomIdParam = request.getParameter("roomId");
                 if (roomIdParam == null || roomIdParam.isBlank()) {
                     response.sendRedirect("rooms");
@@ -151,10 +151,40 @@ public class BookingController extends HttpServlet {
             java.time.LocalDate checkinDate = java.time.LocalDate.parse(checkinDateStr);
             java.time.LocalDate checkoutDate = java.time.LocalDate.parse(checkoutDateStr);
 
+            // Preserve input
+            request.setAttribute("checkinDate", checkinDateStr);
+            request.setAttribute("checkoutDate", checkoutDateStr);
+            request.setAttribute("numGuests", numGuests);
+
             // Validate dates
             if (!checkoutDate.isAfter(checkinDate)) {
                 request.setAttribute("type", "error");
                 request.setAttribute("mess", "Check-out date must be after check-in date!");
+
+                // Re-fetch room info
+                Map.Entry<Room, RoomType> entry = DAOGuest.INSTANCE.getRoomDetailWithType(roomId);
+                if (entry != null) {
+                    request.setAttribute("room", entry.getKey());
+                    request.setAttribute("roomType", entry.getValue());
+                }
+
+                request.getRequestDispatcher("Views/Booking/Customer/Booking.jsp").forward(request, response);
+                return;
+            }
+
+            // Check availability
+            boolean isAvailable = DAOBooking.INSTANCE.isRoomAvailable(roomId, checkinDate, checkoutDate);
+            if (!isAvailable) {
+                request.setAttribute("type", "error");
+                request.setAttribute("mess", "Room is not available for the selected dates!");
+
+                // Re-fetch room info to render page correctly
+                Map.Entry<Room, RoomType> entry = DAOGuest.INSTANCE.getRoomDetailWithType(roomId);
+                if (entry != null) {
+                    request.setAttribute("room", entry.getKey());
+                    request.setAttribute("roomType", entry.getValue());
+                }
+
                 request.getRequestDispatcher("Views/Booking/Customer/Booking.jsp").forward(request, response);
                 return;
             }
@@ -185,8 +215,8 @@ public class BookingController extends HttpServlet {
             boolean success = DAOBooking.INSTANCE.createBooking(booking);
 
             if (success) {
-                // Redirect to confirmation page
-                response.sendRedirect(request.getContextPath() + "/booking_confirm");
+                // Redirect to payment page instead of confirmation
+                response.sendRedirect(request.getContextPath() + "/payment?bookingId=" + booking.getBookingId());
             } else {
                 request.setAttribute("type", "error");
                 request.setAttribute("mess", "Failed to create booking. Please try again.");
@@ -219,18 +249,49 @@ public class BookingController extends HttpServlet {
                 return;
             }
 
-            // Cancel the booking
+            // Check if booking has completed payment
+            DAL.Payment.DAOPayment daoPayment = DAL.Payment.DAOPayment.INSTANCE;
+            Model.Payment payment = daoPayment.getPaymentByBookingId(bookingId);
+            boolean hasPayment = payment != null && payment.isCompleted();
+
+            // Cancel the booking FIRST (before payment refund, since trigger will also try
+            // to cancel)
             boolean success = DAOBooking.INSTANCE.cancelBooking(bookingId);
 
-            if (success) {
-                request.setAttribute("type", "success");
-                request.setAttribute("mess", "Booking cancelled successfully!");
-            } else {
-                request.setAttribute("type", "error");
-                request.setAttribute("mess", "Cannot cancel this booking. Only pending bookings can be cancelled.");
+            boolean walletRefunded = false;
+            if (success && hasPayment) {
+                // Check if payment was made via WALLET - refund to wallet
+                if (payment.getPaymentMethod() == Model.Payment.PaymentMethod.WALLET) {
+                    DAL.Wallet.DAOWallet daoWallet = DAL.Wallet.DAOWallet.INSTANCE;
+                    String refundDescription = "Refund for cancelled booking #" + bookingId;
+                    walletRefunded = daoWallet.processRefund(
+                            currentUser.getUserId(),
+                            payment.getAmount(),
+                            bookingId,
+                            refundDescription);
+                }
+                // Process refund in payment table (this will trigger status update, but booking
+                // is already cancelled)
+                daoPayment.processRefund(bookingId, "Customer requested cancellation");
             }
 
-            request.getRequestDispatcher("Views/Booking/Customer/MyBooking.jsp").forward(request, response);
+            HttpSession session = request.getSession();
+            if (success) {
+                if (hasPayment) {
+                    if (walletRefunded) {
+                        session.setAttribute("success", "Booking cancelled and " +
+                                String.format("%,.0f", payment.getAmount()) + " VND refunded to Luxe Wallet!");
+                    } else {
+                        session.setAttribute("success", "Booking cancelled and refund processed successfully!");
+                    }
+                } else {
+                    session.setAttribute("success", "Booking cancelled successfully!");
+                }
+            } else {
+                session.setAttribute("error", "Cannot cancel this booking.");
+            }
+
+            response.sendRedirect(request.getContextPath() + "/my_booking");
 
         } catch (Exception e) {
             e.printStackTrace();

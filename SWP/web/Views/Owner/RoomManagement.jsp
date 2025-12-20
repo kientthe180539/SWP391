@@ -94,7 +94,7 @@
                                                         <th>Image</th>
                                                         <th>Room Number</th>
                                                         <th>Floor</th>
-                                                        <th>Type ID</th>
+                                                        <th>Room Type</th>
                                                         <th>Status</th>
                                                         <th>Action</th>
                                                     </tr>
@@ -122,7 +122,13 @@
                                                             </td>
                                                             <td class="fw-bold">Room ${r.roomNumber}</td>
                                                             <td>${r.floor}</td>
-                                                            <td>${r.roomTypeId}</td>
+                                                            <td>
+                                                                <c:forEach items="${roomTypes}" var="rt">
+                                                                    <c:if test="${rt.roomTypeId == r.roomTypeId}">
+                                                                        ${rt.typeName}
+                                                                    </c:if>
+                                                                </c:forEach>
+                                                            </td>
                                                             <td>
                                                                 <span
                                                                     class="badge rounded-pill 
@@ -229,7 +235,8 @@
                                                     <th>Type Name</th>
                                                     <th>Description</th>
                                                     <th>Price</th>
-                                                    <th>Occupany</th>
+                                                    <th>Occupancy</th>
+                                                    <th>Amenities</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
@@ -242,7 +249,19 @@
                                                         <td>$${rt.basePrice}</td>
                                                         <td>${rt.maxOccupancy}</td>
                                                         <td>
-                                                            <!-- Toggle/Edit could be added here similar to Create -->
+                                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                                onclick="openAmenitiesModal(${rt.roomTypeId}, '${rt.typeName}')">
+                                                                <i class="bi bi-box2"></i> Manage
+                                                            </button>
+                                                        </td>
+                                                        <!-- Actions -->
+                                                        <td>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-primary me-1"
+                                                                onclick="openEditTypeModal(${rt.roomTypeId}, '${rt.typeName}', '${rt.description}', ${rt.basePrice}, ${rt.maxOccupancy})">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                            <!-- Delete Button -->
                                                             <form action="<c:url value='/owner/rooms'/>" method="post"
                                                                 style="display:inline;">
                                                                 <input type="hidden" name="action"
@@ -259,6 +278,42 @@
                                                 </c:forEach>
                                             </tbody>
                                         </table>
+                                        <!-- Pagination -->
+                                        <nav aria-label="Room types pagination" class="mt-4">
+                                            <ul class="pagination justify-content-center">
+                                                <c:if test="${currentPage > 1}">
+                                                    <li class="page-item">
+                                                        <a class="page-link"
+                                                           href="<c:url value='/owner/rooms?tab=types&page=${currentPage - 1}'/>"
+                                                           aria-label="Previous">
+                                                            <span aria-hidden="true">&laquo;</span>
+                                                        </a>
+                                                    </li>
+                                                </c:if>
+
+                                                <c:forEach begin="1" end="${totalPages}" var="i">
+                                                    <li class="page-item ${i == currentPage ? 'active' : ''}">
+                                                        <a class="page-link"
+                                                           href="<c:url value='/owner/rooms?tab=types&page=${i}'/>">${i}</a>
+                                                    </li>
+                                                </c:forEach>
+
+                                                <c:if test="${currentPage < totalPages}">
+                                                    <li class="page-item">
+                                                        <a class="page-link"
+                                                           href="<c:url value='/owner/rooms?tab=types&page=${currentPage + 1}'/>"
+                                                           aria-label="Next">
+                                                            <span aria-hidden="true">&raquo;</span>
+                                                        </a>
+                                                    </li>
+                                                </c:if>
+                                            </ul>
+                                            <div class="text-center text-muted">
+                                                Showing ${(currentPage - 1) * 10 + 1} to
+                                                    ${currentPage * 10 > totalTypes ? totalTypes : currentPage * 10}
+                                                of ${totalTypes} room types
+                                            </div>
+                                        </nav>
                                     </c:when>
                                 </c:choose>
                             </div>
@@ -440,6 +495,101 @@
                 </div>
             </div>
 
+            <!-- Modal for Edit Room Type -->
+            <div class="modal fade" id="editTypeModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <form action="<c:url value='/owner/rooms'/>" method="post">
+                        <input type="hidden" name="action" value="updateRoomType">
+                        <input type="hidden" name="roomTypeId" id="editTypeId">
+                        <input type="hidden" name="redirectTab" value="types">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Room Type</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Type Name</label>
+                                    <input type="text" name="typeName" id="editTypeName" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea name="description" id="editTypeDescription" class="form-control"
+                                        rows="3"></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label">Base Price ($)</label>
+                                        <input type="number" step="0.01" name="basePrice" id="editTypePrice"
+                                            class="form-control" required>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label">Max Occupancy</label>
+                                        <input type="number" name="maxOccupancy" id="editTypeOccupancy"
+                                            class="form-control" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Update</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal for Manage Room Type Amenities -->
+            <div class="modal fade" id="amenitiesModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Manage Amenities - <span id="amenitiesRoomTypeName"></span></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Add Amenity Row (client-side) -->
+                            <div class="row g-2 mb-4">
+                                <div class="col-md-6">
+                                    <select id="addAmenitySelect" class="form-select form-select-sm">
+                                        <option value="">-- Select Amenity to Add --</option>
+                                        <c:forEach items="${allAmenities}" var="a">
+                                            <option value="${a.amenityId}" data-name="${a.name}">${a.name}</option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" id="addAmenityQty" min="1" value="1"
+                                        class="form-control form-control-sm" placeholder="Qty">
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-sm btn-outline-success w-100"
+                                        onclick="addAmenityToList()">
+                                        <i class="bi bi-plus"></i> Add to List
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Current Amenities Table (inside form) -->
+                            <form action="<c:url value='/owner/rooms'/>" method="post" id="amenitiesForm">
+                                <input type="hidden" name="action" value="saveAllRoomTypeAmenities">
+                                <input type="hidden" name="roomTypeId" id="formRoomTypeId">
+                                <div id="amenitiesTableContainer">
+                                    <p class="text-muted text-center">Loading amenities...</p>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" form="amenitiesForm" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Save All Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
             <script>
@@ -513,6 +663,125 @@
 
                     var modal = new bootstrap.Modal(document.getElementById('editRoomModal'));
                     modal.show();
+                }
+
+                function openEditTypeModal(id, name, desc, price, occupancy) {
+                    document.getElementById('editTypeId').value = id;
+                    document.getElementById('editTypeName').value = name;
+                    document.getElementById('editTypeDescription').value = desc || '';
+                    document.getElementById('editTypePrice').value = price;
+                    document.getElementById('editTypeOccupancy').value = occupancy;
+
+                    var modal = new bootstrap.Modal(document.getElementById('editTypeModal'));
+                    modal.show();
+                }
+
+                // Room Type Amenities data from server (embedded as JSON)
+                var roomTypeAmenities = {};
+                <c:if test="${not empty roomTypeAmenitiesMap}">
+                    <c:forEach items="${roomTypes}" var="rt">
+                        roomTypeAmenities[${rt.roomTypeId}] = [
+                        <c:forEach items="${roomTypeAmenitiesMap[rt.roomTypeId]}" var="rta" varStatus="status">
+                            {id: ${rta.id}, amenityId: ${rta.amenityId}, amenityName: '${rta.amenity.name}', qty: ${rta.defaultQuantity}, isNew: false}<c:if test="${!status.last}">,</c:if>
+                        </c:forEach>
+                        ];
+                    </c:forEach>
+                </c:if>
+
+                var currentRoomTypeId = null;
+                var tempAmenities = []; // Temporary list including new ones
+                var newAmenityCounter = 0;
+
+                function openAmenitiesModal(roomTypeId, typeName) {
+                    currentRoomTypeId = roomTypeId;
+                    document.getElementById('amenitiesRoomTypeName').textContent = typeName;
+                    document.getElementById('formRoomTypeId').value = roomTypeId;
+
+                    // Copy existing amenities to temp list
+                    tempAmenities = JSON.parse(JSON.stringify(roomTypeAmenities[roomTypeId] || []));
+                    newAmenityCounter = 0;
+
+                    renderAmenitiesTable();
+
+                    var modal = new bootstrap.Modal(document.getElementById('amenitiesModal'));
+                    modal.show();
+                }
+
+                function addAmenityToList() {
+                    var select = document.getElementById('addAmenitySelect');
+                    var qtyInput = document.getElementById('addAmenityQty');
+
+                    if (!select.value) {
+                        alert('Please select an amenity');
+                        return;
+                    }
+
+                    var amenityId = parseInt(select.value);
+                    var amenityName = select.options[select.selectedIndex].getAttribute('data-name');
+                    var qty = parseInt(qtyInput.value) || 1;
+
+                    // Check if already in list
+                    var exists = tempAmenities.some(function (a) { return a.amenityId === amenityId; });
+                    if (exists) {
+                        alert('This amenity is already in the list');
+                        return;
+                    }
+
+                    newAmenityCounter++;
+                    tempAmenities.push({
+                        id: 'new_' + newAmenityCounter,
+                        amenityId: amenityId,
+                        amenityName: amenityName,
+                        qty: qty,
+                        isNew: true
+                    });
+
+                    // Reset inputs
+                    select.value = '';
+                    qtyInput.value = 1;
+
+                    renderAmenitiesTable();
+                }
+
+                function removeFromList(tempId) {
+                    tempAmenities = tempAmenities.filter(function (a) {
+                        return (a.isNew ? a.id : a.id.toString()) !== tempId.toString();
+                    });
+                    renderAmenitiesTable();
+                }
+
+                function renderAmenitiesTable() {
+                    var container = document.getElementById('amenitiesTableContainer');
+
+                    if (tempAmenities.length === 0) {
+                        container.innerHTML = '<p class="text-muted text-center">No amenities. Use the form above to add amenities.</p>';
+                        return;
+                    }
+
+                    var html = '<table class="table table-sm table-bordered align-middle"><thead><tr><th>Amenity</th><th style="width:100px">Qty</th><th style="width:60px">Remove</th></tr></thead><tbody>';
+
+                    tempAmenities.forEach(function (a, idx) {
+                        var rowId = a.isNew ? a.id : a.id;
+                        html += '<tr>';
+                        html += '<td>' + a.amenityName + (a.isNew ? ' <span class="badge bg-success">New</span>' : '') + '</td>';
+                        html += '<td><input type="number" name="item_' + idx + '_qty" value="' + a.qty + '" min="1" class="form-control form-control-sm text-center" onchange="updateTempQty(' + idx + ', this.value)"></td>';
+                        html += '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFromList(\'' + rowId + '\')"><i class="bi bi-x"></i></button></td>';
+                        // Hidden inputs for form submission
+                        html += '<input type="hidden" name="item_' + idx + '_id" value="' + (a.isNew ? '' : a.id) + '">';
+                        html += '<input type="hidden" name="item_' + idx + '_amenityId" value="' + a.amenityId + '">';
+                        html += '<input type="hidden" name="item_' + idx + '_isNew" value="' + a.isNew + '">';
+                        html += '</tr>';
+                    });
+
+                    html += '</tbody></table>';
+                    html += '<input type="hidden" name="itemCount" value="' + tempAmenities.length + '">';
+                    container.innerHTML = html;
+                }
+
+                function updateTempQty(idx, val) {
+                    if (tempAmenities[idx]) {
+                        tempAmenities[idx].qty = parseInt(val) || 1;
+                    }
                 }
             </script>
         </body>

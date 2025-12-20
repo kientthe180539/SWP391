@@ -29,7 +29,7 @@ public class DAOReceptionist extends DAO {
                 + "JOIN rooms r ON b.room_id = r.room_id "
                 + "JOIN room_types rt ON r.room_type_id = rt.room_type_id "
                 + "WHERE b.status = 'PENDING' "
-                + "ORDER BY b.created_at ASC";
+                + "ORDER BY b.created_at DESC";
 
         try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -209,6 +209,10 @@ public class DAOReceptionist extends DAO {
                     sql.append("b.checkin_date");
                 case "status" ->
                     sql.append("b.status");
+                case "booking_date" ->
+                    sql.append("b.created_at");
+                case "total_amount" ->
+                    sql.append("b.total_amount");
                 default ->
                     sql.append("b.created_at");
             }
@@ -403,12 +407,12 @@ public class DAOReceptionist extends DAO {
     // ======================================================
     public boolean markNoShow(int bookingId, int receptionistId) {
         String sql = """
-        UPDATE bookings
-        SET status = 'NO_SHOW',
-            updated_at = NOW()
-        WHERE booking_id = ?
-          AND status = 'CONFIRMED'
-    """;
+                    UPDATE bookings
+                    SET status = 'NO_SHOW',
+                        updated_at = NOW()
+                    WHERE booking_id = ?
+                      AND status = 'CONFIRMED'
+                """;
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, bookingId);
@@ -421,17 +425,17 @@ public class DAOReceptionist extends DAO {
 
     // ======================================================
     // Check-In Booking
+    // Note: Database trigger trg_booking_status_update handles room status updates
     // ======================================================
     public boolean checkInBooking(int bookingId, int receptionistId) {
-        String checkBookingSql = "SELECT status, checkin_date, room_id FROM bookings WHERE booking_id = ?";
+        String checkBookingSql = "SELECT status, checkin_date FROM bookings WHERE booking_id = ?";
         String updateBookingSql = "UPDATE bookings SET status = 'CHECKED_IN', updated_at = NOW() WHERE booking_id = ?";
-        String updateRoomSql = "UPDATE rooms SET status = 'OCCUPIED' WHERE room_id = ?";
+        // Trigger trg_booking_status_update will automatically:
+        // - Update rooms.status to OCCUPIED
+        // - Update room_status_periods.status to OCCUPIED
 
         try {
-            connection.setAutoCommit(false);
-
             // 1. Validate booking status and check-in date
-            int roomId = -1;
             try (PreparedStatement ps = connection.prepareStatement(checkBookingSql)) {
                 ps.setInt(1, bookingId);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -442,69 +446,44 @@ public class DAOReceptionist extends DAO {
 
                         // Only CONFIRMED bookings can be checked in
                         if (!"CONFIRMED".equals(status)) {
-                            connection.rollback();
                             return false;
                         }
 
                         // Check-in date must be today or in the past
                         if (checkinDate.isAfter(today)) {
-                            connection.rollback();
                             return false;
                         }
-
-                        roomId = rs.getInt("room_id");
                     } else {
-                        connection.rollback();
                         return false;
                     }
                 }
             }
 
-            // 2. Update booking status
+            // 2. Update booking status (trigger handles the rest)
             try (PreparedStatement ps = connection.prepareStatement(updateBookingSql)) {
                 ps.setInt(1, bookingId);
-                ps.executeUpdate();
+                return ps.executeUpdate() > 0;
             }
-
-            // 3. Update room status to OCCUPIED
-            try (PreparedStatement ps = connection.prepareStatement(updateRoomSql)) {
-                ps.setInt(1, roomId);
-                ps.executeUpdate();
-            }
-
-            connection.commit();
-            return true;
 
         } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
             e.printStackTrace();
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
         return false;
     }
 
     // ======================================================
     // Check-Out Booking
+    // Note: Database trigger trg_booking_status_update handles room status updates
     // ======================================================
     public boolean checkOutBooking(int bookingId, int receptionistId) {
-        String checkBookingSql = "SELECT status, room_id FROM bookings WHERE booking_id = ?";
+        String checkBookingSql = "SELECT status FROM bookings WHERE booking_id = ?";
         String updateBookingSql = "UPDATE bookings SET status = 'COMPLETED', updated_at = NOW() WHERE booking_id = ?";
-        String updateRoomSql = "UPDATE rooms SET status = 'AVAILABLE' WHERE room_id = ?";
+        // Trigger trg_booking_status_update will automatically:
+        // - Update rooms.status to DIRTY
+        // - Update room_status_periods.end_date to today
 
         try {
-            connection.setAutoCommit(false);
-
             // 1. Validate booking status
-            int roomId = -1;
             try (PreparedStatement ps = connection.prepareStatement(checkBookingSql)) {
                 ps.setInt(1, bookingId);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -513,46 +492,22 @@ public class DAOReceptionist extends DAO {
 
                         // Only CHECKED_IN bookings can be checked out
                         if (!"CHECKED_IN".equals(status)) {
-                            connection.rollback();
                             return false;
                         }
-
-                        roomId = rs.getInt("room_id");
                     } else {
-                        connection.rollback();
                         return false;
                     }
                 }
             }
 
-            // 2. Update booking status
+            // 2. Update booking status (trigger handles the rest)
             try (PreparedStatement ps = connection.prepareStatement(updateBookingSql)) {
                 ps.setInt(1, bookingId);
-                ps.executeUpdate();
+                return ps.executeUpdate() > 0;
             }
-
-            // 3. Update room status to AVAILABLE
-            try (PreparedStatement ps = connection.prepareStatement(updateRoomSql)) {
-                ps.setInt(1, roomId);
-                ps.executeUpdate();
-            }
-
-            connection.commit();
-            return true;
 
         } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
             e.printStackTrace();
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
         return false;
     }

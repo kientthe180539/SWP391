@@ -20,13 +20,7 @@
                     <div class="container-fluid p-4">
                         <h2 class="mb-4">Create Inspection Task</h2>
 
-                        <c:if test="${not empty mess}">
-                            <div
-                                class="alert alert-${type == 'success' ? 'success' : 'danger'} alert-dismissible fade show">
-                                ${mess}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        </c:if>
+                        <jsp:include page="../public/notify.jsp" />
 
                         <div class="card shadow-sm">
                             <div class="card-body">

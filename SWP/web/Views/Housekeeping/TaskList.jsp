@@ -29,6 +29,7 @@
                                     <c:choose>
                                         <c:when test="${param.type == 'CLEANING'}">Cleaning Tasks</c:when>
                                         <c:when test="${param.type == 'INSPECTION'}">Inspection Tasks</c:when>
+                                        <c:when test="${param.status == 'DONE'}">Task History</c:when>
                                         <c:otherwise>My Tasks</c:otherwise>
                                     </c:choose>
                                 </h2>
@@ -63,7 +64,6 @@
                                                 <option value="NEW" ${status=='NEW' ? 'selected' : '' }>New</option>
                                                 <option value="IN_PROGRESS" ${status=='IN_PROGRESS' ? 'selected' : '' }>
                                                     In Progress</option>
-                                                <option value="DONE" ${status=='DONE' ? 'selected' : '' }>Done</option>
                                             </select>
                                         </div>
                                         <div class="col-md-2">
@@ -118,7 +118,8 @@
                                                     <td class="ps-4 text-muted">${(currentPage - 1) * 10 + st.index + 1}
                                                     </td>
                                                     <td>
-                                                        <span class="fw-bold"> ${hkp.getRoomById(t.roomId).getRoomNumber()}</span>
+                                                        <span class="fw-bold">
+                                                            ${hkp.getRoomById(t.roomId).getRoomNumber()}</span>
                                                     </td>
                                                     <td>${t.taskDate}</td>
                                                     <td>
@@ -146,10 +147,28 @@
                                                     <td class="text-muted small text-truncate"
                                                         style="max-width: 200px;">${t.note}</td>
                                                     <td class="text-end pe-4">
-                                                        <a href="<c:url value='/housekeeping/task-detail'><c:param name='id' value='${t.taskId}'/></c:url>"
-                                                            class="btn btn-sm btn-outline-primary">
-                                                            Details
-                                                        </a>
+                                                        <c:choose>
+                                                            <c:when test="${t.taskType == 'CLEANING'}">
+                                                                <a href="<c:url value='/housekeeping/task-detail'><c:param name='id' value='${t.taskId}'/></c:url>"
+                                                                    class="btn btn-sm btn-outline-primary">
+                                                                    Details
+                                                                </a>
+                                                            </c:when>
+                                                            <c:when
+                                                                test="${t.status == 'DONE' && (t.taskType == 'INSPECTION' || t.taskType == 'CHECKIN' || t.taskType == 'CHECKOUT')}">
+                                                                <a href="<c:url value='/housekeeping/inspection-history'><c:param name='roomId' value='${t.roomId}'/><c:param name='source' value='tasks'/></c:url>"
+                                                                    class="btn btn-outline-secondary btn-sm">
+                                                                    <i class="bi bi-clock-history me-1"></i>View History
+                                                                </a>
+                                                            </c:when>
+                                                            <c:when
+                                                                test="${t.taskType == 'INSPECTION' || t.taskType == 'CHECKIN' || t.taskType == 'CHECKOUT'}">
+                                                                <a href="<c:url value='/housekeeping/inspection'><c:param name='roomId' value='${t.roomId}'/><c:param name='type' value='${t.taskType}' /><c:param name='taskId' value='${t.taskId}' /></c:url>"
+                                                                    class="btn btn-sm btn-outline-primary">
+                                                                    <i class="bi bi-clipboard-check me-1"></i>Inspect
+                                                                </a>
+                                                            </c:when>
+                                                        </c:choose>
                                                     </td>
                                                 </tr>
                                             </c:forEach>
@@ -166,10 +185,19 @@
                                                 href="?page=${currentPage - 1}&search=${search}&status=${status}&dateFrom=${dateFrom}&dateTo=${dateTo}&sortBy=${sortBy}&type=${param.type}">Previous</a>
                                         </li>
                                         <c:forEach begin="1" end="${totalPages}" var="p">
-                                            <li class="page-item ${currentPage == p ? 'active' : ''}">
-                                                <a class="page-link"
-                                                    href="?page=${p}&search=${search}&status=${status}&dateFrom=${dateFrom}&dateTo=${dateTo}&sortBy=${sortBy}&type=${param.type}">${p}</a>
-                                            </li>
+                                            <c:if
+                                                test="${p == 1 || p == totalPages || (p >= currentPage - 2 && p <= currentPage + 2)}">
+                                                <li class="page-item ${currentPage == p ? 'active' : ''}">
+                                                    <a class="page-link"
+                                                        href="?page=${p}&search=${search}&status=${status}&dateFrom=${dateFrom}&dateTo=${dateTo}&sortBy=${sortBy}&type=${param.type}">${p}</a>
+                                                </li>
+                                            </c:if>
+                                            <c:if test="${p == 2 && currentPage > 4}">
+                                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                                            </c:if>
+                                            <c:if test="${p == totalPages - 1 && currentPage < totalPages - 3}">
+                                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                                            </c:if>
                                         </c:forEach>
                                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
                                             <a class="page-link"
@@ -184,6 +212,16 @@
                     <jsp:include page="../Shared/Footer.jsp" />
                 </div>
             </div>
+
+            <c:if test="${param.msg == 'success'}">
+                <c:set var="type" value="success" scope="request" />
+                <c:set var="mess" value="Operation completed successfully." scope="request" />
+            </c:if>
+            <c:if test="${param.msg == 'failed'}">
+                <c:set var="type" value="error" scope="request" />
+                <c:set var="mess" value="Operation failed." scope="request" />
+            </c:if>
+            <jsp:include page="../public/notify.jsp" />
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         </body>

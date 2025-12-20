@@ -3,7 +3,6 @@ package Controller.Housekeeping;
 import DAL.AmenityDAO;
 import DAL.Housekeeping.DAOHousekeeping;
 import DAL.RoomInspectionDAO;
-import Model.Amenity;
 import Model.InspectionDetail;
 import Model.Room;
 import Model.RoomInspection;
@@ -23,7 +22,8 @@ import jakarta.servlet.http.HttpSession;
 @WebServlet(name = "InspectionController", urlPatterns = {
         "/housekeeping/inspection",
         "/housekeeping/inspection-history",
-        "/housekeeping/request-replenishment"
+        "/housekeeping/request-replenishment",
+        "/housekeeping/inspection-detail"
 })
 public class InspectionController extends HttpServlet {
 
@@ -55,6 +55,9 @@ public class InspectionController extends HttpServlet {
                 break;
             case "/housekeeping/inspection-history":
                 showInspectionHistory(request, response);
+                break;
+            case "/housekeeping/inspection-detail":
+                showInspectionDetail(request, response);
                 break;
             default:
                 response.sendError(404);
@@ -118,7 +121,7 @@ public class InspectionController extends HttpServlet {
         List<RoomTypeAmenity> standardAmenities = amenityDAO.getAmenitiesByRoomType(room.getRoomTypeId());
 
         // For CHECKOUT type, fetch CHECKIN inspection for comparison
-        Model.RoomInspection checkinInspection = null;
+        RoomInspection checkinInspection = null;
         if ("CHECKOUT".equals(type) && bookingIdStr != null && !bookingIdStr.isBlank()) {
             int bookingId = Integer.parseInt(bookingIdStr);
             checkinInspection = inspectionDAO.getInspectionByBookingAndType(bookingId, "CHECKIN");
@@ -163,6 +166,57 @@ public class InspectionController extends HttpServlet {
             note = "[Cleanliness/Condition]: " + cleanlinessNote + "\n" + note;
         }
 
+        // Validate Task Date if taskId is present
+        String taskIdParam = request.getParameter("taskId");
+        if (taskIdParam != null && !taskIdParam.isBlank()) {
+            try {
+                int taskId = Integer.parseInt(taskIdParam);
+                Model.HousekeepingTask task = DAOHousekeeping.INSTANCE.getTaskById(taskId);
+                if (task != null) {
+                    java.time.LocalDate taskDate = task.getTaskDate();
+                    java.time.LocalDate today = java.time.LocalDate.now();
+                    java.time.LocalDate yesterday = today.minusDays(1);
+
+                    if (!taskDate.equals(today) && !taskDate.equals(yesterday)) {
+                        request.setAttribute("error", "Cannot submit inspection for tasks older than yesterday.");
+                        // Re-load form data to show page again
+                        // We need to call showInspectionForm-like logic or redirect with error param
+                        // But strictly, we should forward to show attributes?
+                        // showInspectionForm expects GET params.
+                        // Let's redirect with error param which showInspectionForm should handle (or we
+                        // add validaton there).
+                        // Inspecting showInspectionForm: it accepts request params.
+                        // So calling do-GET/showInspectionForm with attributes set might work if we
+                        // forward?
+
+                        // We are in doPost.
+                        // Let's rely on showInspectionForm to populate data.
+                        // But showInspectionForm reads from request.getParameter.
+                        // We can set attributes that override/supplement?
+                        // Actually, showInspectionForm reads "roomId", "bookingId", "type". These are
+                        // likely in the POST request too.
+                        // So we can just call showInspectionForm(request, response) after setting an
+                        // error attribute?
+                        // But we need to ensure the JSP displays the error.
+                        // Let's assume InspectionForm.jsp displays 'error' or 'mess' attribute or
+                        // parameter.
+                        // Code below: response.sendRedirect("inspection?roomId=" + roomId +
+                        // "&error=failed");
+                        // implies it reads 'error' param.
+                        // So I can redirect or forward. Forward is better to keep POST data if needed,
+                        // but Redirect is safer for refresh.
+                        // Let's Redirect with specific error message.
+                        response.sendRedirect("inspection?roomId=" + roomId + "&bookingId="
+                                + (bookingIdStr != null ? bookingIdStr : "") + "&type="
+                                + (typeStr != null ? typeStr : "") + "&taskId=" + taskId + "&error=date_invalid");
+                        return;
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // ignore invalid task id
+            }
+        }
+
         RoomInspection ri = new RoomInspection();
         ri.setRoomId(roomId);
         if (bookingIdStr != null && !bookingIdStr.isBlank()) {
@@ -170,7 +224,11 @@ public class InspectionController extends HttpServlet {
         }
         ri.setInspectorId(inspector.getUserId());
         ri.setInspectionDate(LocalDateTime.now());
-        ri.setType(typeStr);
+        if ("INSPECTION".equals(typeStr)) {
+            ri.setType(RoomInspection.Type.ROUTINE);
+        } else {
+            ri.setType(typeStr);
+        }
         ri.setNote(note);
 
         // Parse details
@@ -225,13 +283,54 @@ public class InspectionController extends HttpServlet {
 
             // Logic for CHECKIN: If all good, make room AVAILABLE
             if ("CHECKIN".equals(typeStr) && !hasDamages) {
-                DAOHousekeeping.INSTANCE.updateRoomStatus(roomId, Model.Room.Status.AVAILABLE);
+                DAOHousekeeping.INSTANCE.updateRoomStatus(roomId, Room.Status.AVAILABLE);
             }
 
-            response.sendRedirect("inspection-history?roomId=" + roomId + "&msg=success");
+            // Close the task if taskId is provided
+            String taskIdStr = request.getParameter("taskId");
+            boolean isTaskFlow = false;
+            if (taskIdStr != null && !taskIdStr.isBlank()) {
+                try {
+                    int taskId = Integer.parseInt(taskIdStr);
+                    DAOHousekeeping.INSTANCE.updateTaskStatusAndNote(taskId, Model.HousekeepingTask.TaskStatus.DONE,
+                            "[Inspection Completed] " + note);
+                    isTaskFlow = true;
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (isTaskFlow) {
+                response.sendRedirect(request.getContextPath() + "/housekeeping/tasks?msg=success");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/manager/inspections?msg=success");
+            }
         } else {
             response.sendRedirect("inspection?roomId=" + roomId + "&error=failed");
         }
+    }
+
+    private void showInspectionDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String idStr = request.getParameter("id");
+        if (idStr != null && !idStr.isBlank()) {
+            int id = Integer.parseInt(idStr);
+            RoomInspection inspection = inspectionDAO.getInspectionById(id);
+            request.setAttribute("inspection", inspection);
+            // Set backUrl for navigation
+            String source = request.getParameter("source");
+            if ("history".equals(source)) {
+                request.setAttribute("backUrl", request.getContextPath() + "/housekeeping/history");
+            } else if ("tasks".equals(source)) {
+                request.setAttribute("backUrl", request.getContextPath() + "/housekeeping/tasks");
+            } else {
+                request.setAttribute("backUrl", request.getContextPath() + "/manager/inspections");
+            }
+        } else {
+            response.sendError(404);
+            return;
+        }
+        request.getRequestDispatcher("/Views/Manager/InspectionDetail.jsp").forward(request, response);
     }
 
     private void handleReplenishmentRequest(HttpServletRequest request, HttpServletResponse response, User requester)

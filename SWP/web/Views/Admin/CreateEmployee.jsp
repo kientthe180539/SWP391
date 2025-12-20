@@ -30,12 +30,10 @@
                                 <div class="card shadow-sm">
                                     <div class="card-body p-4">
                                         <c:if test="${not empty error}">
-                                            <div class="alert alert-danger alert-dismissible fade show">
-                                                ${error}
-                                                <button type="button" class="btn-close"
-                                                    data-bs-dismiss="alert"></button>
-                                            </div>
+                                            <c:set var="type" value="error" scope="request" />
+                                            <c:set var="mess" value="${error}" scope="request" />
                                         </c:if>
+                                        <jsp:include page="../public/notify.jsp" />
 
                                         <form action="<c:url value='/admin/create-employee'/>" method="POST">
                                             <input type="hidden" name="action" value="createEmployee">

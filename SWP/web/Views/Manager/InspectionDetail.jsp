@@ -36,8 +36,11 @@
                     <div class="container-fluid p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h2>
-                                <a href="<c:url value='/manager/inspections'/>"
-                                    class="text-decoration-none text-dark me-2">
+                                <c:set var="targetUrl" value="${pageContext.request.contextPath}/manager/inspections" />
+                                <c:if test="${not empty backUrl}">
+                                    <c:set var="targetUrl" value="${backUrl}" />
+                                </c:if>
+                                <a href="${targetUrl}" class="text-decoration-none text-dark me-2">
                                     <i class="bi bi-arrow-left"></i>
                                 </a>
                                 <c:choose>

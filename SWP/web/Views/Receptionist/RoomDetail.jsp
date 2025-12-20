@@ -85,12 +85,13 @@
                         <div class="logo">🏨 Hotel Management</div>
                         <div class="header-right">
                             <div class="nav-links">
-                                <a href="${pageContext.request.contextPath}/receptionist/dashboard">Dashboard</a>
-                                <a href="${pageContext.request.contextPath}/reservation_approval">Approvals</a>
+                                <a href="${pageContext.request.contextPath}/receptionist/dashboard"
+                                    class="active">Dashboard</a>
                                 <a href="${pageContext.request.contextPath}/receptionist/reservations">Reservations</a>
                                 <a href="${pageContext.request.contextPath}/receptionist/checkinout">Check-in/out</a>
-                                <a href="${pageContext.request.contextPath}/receptionist/room-status"
-                                    class="active">Rooms</a>
+                                <a href="${pageContext.request.contextPath}/receptionist/room-status">Rooms</a>
+                                <a href="${pageContext.request.contextPath}/receptionist/schedule">My Shift</a>
+                                <a href="${pageContext.request.contextPath}/receptionist/profile">Profile</a>
                                 <a href="${pageContext.request.contextPath}/logout">Logout</a>
                             </div>
                             <div class="staff-profile">
@@ -173,38 +174,7 @@
                                 </div>
                             </c:if>
 
-                            <!-- Room Status Update -->
-                            <div class="detail-card">
-                                <h3>⚙️ Update Room Status</h3>
-                                <form method="post"
-                                    action="${pageContext.request.contextPath}/receptionist/room-detail">
-                                    <input type="hidden" name="action" value="updateStatus">
-                                    <input type="hidden" name="roomId" value="${room.roomId}">
 
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">New
-                                            Status</label>
-                                        <select name="status" required
-                                            style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
-                                            <option value="">-- Select Status --</option>
-                                            <option value="AVAILABLE" ${room.status=='AVAILABLE' ? 'selected' : '' }>
-                                                Available</option>
-                                            <option value="OCCUPIED" ${room.status=='OCCUPIED' ? 'selected' : '' }>
-                                                Occupied</option>
-                                            <option value="CLEANING" ${room.status=='CLEANING' ? 'selected' : '' }>
-                                                Cleaning</option>
-                                            <option value="MAINTENANCE" ${room.status=='MAINTENANCE' ? 'selected' : ''
-                                                }>Maintenance</option>
-                                            <option value="OUT_OF_SERVICE" ${room.status=='OUT_OF_SERVICE' ? 'selected'
-                                                : '' }>Out of Service</option>
-                                        </select>
-                                    </div>
-
-                                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                                        Update Status
-                                    </button>
-                                </form>
-                            </div>
                         </div>
 
                         <!-- Room Description -->

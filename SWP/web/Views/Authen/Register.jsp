@@ -39,7 +39,7 @@
 
                                 <div class="form-group">
                                     <label for="fullName">Full Name</label>
-                                    <input type="text" id="fullName" name="fullName" placeholder="Nguyễn Văn A"
+                                    <input type="text" id="fullName" name="fullName" placeholder="John Doe"
                                         value="${fullName}" required>
                                 </div>
 

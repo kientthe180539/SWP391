@@ -19,12 +19,52 @@
 
                     <div class="container-fluid p-4">
                         <div class="card shadow-sm">
-                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Booking Management</h5>
+                            <div class="card-header bg-white py-3">
+                                <form action="<c:url value='/booking/list'/>" method="get">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-light border-end-0"><i
+                                                        class="bi bi-search"></i></span>
+                                                <input type="text" name="search" class="form-control border-start-0"
+                                                    placeholder="Search by ID, Customer ID..." value="${search}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select name="status" class="form-select form-select-sm">
+                                                <option value="">All Status</option>
+                                                <option value="PENDING" ${status=='PENDING' ? 'selected' : '' }>Pending
+                                                </option>
+                                                <option value="CONFIRMED" ${status=='CONFIRMED' ? 'selected' : '' }>
+                                                    Confirmed</option>
+                                                <option value="CHECKED_IN" ${status=='CHECKED_IN' ? 'selected' : '' }>
+                                                    Checked In</option>
+                                                <option value="CHECKED_OUT" ${status=='CHECKED_OUT' ? 'selected' : '' }>
+                                                    Checked Out</option>
+                                                <option value="CANCELLED" ${status=='CANCELLED' ? 'selected' : '' }>
+                                                    Cancelled</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select name="sortBy" class="form-select form-select-sm">
+                                                <option value="checkin_date" ${sortBy=='checkin_date' ? 'selected' : ''
+                                                    }>
+                                                    Sort by Check-in</option>
+                                                <option value="booking_id" ${sortBy=='booking_id' ? 'selected' : '' }>
+                                                    Sort by ID</option>
+                                                <option value="status" ${sortBy=='status' ? 'selected' : '' }>Sort by
+                                                    Status</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle">
+                                    <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>ID</th>
@@ -37,6 +77,14 @@
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            <c:if test="${empty bookings}">
+                                                <tr>
+                                                    <td colspan="7" class="text-center py-5 text-muted">
+                                                        <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                                                        No bookings found.
+                                                    </td>
+                                                </tr>
+                                            </c:if>
                                             <c:forEach items="${bookings}" var="b">
                                                 <tr>
                                                     <td>#${b.bookingId}</td>
@@ -88,6 +136,30 @@
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                            <div class="card-footer bg-white py-3">
+                                <nav class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Showing ${bookings.size()} of ${totalBookings}
+                                        bookings</small>
+                                    <c:if test="${totalPages > 1}">
+                                        <ul class="pagination pagination-sm mb-0">
+                                            <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                    href="?page=${currentPage - 1}&search=${search}&status=${status}&sortBy=${sortBy}">Previous</a>
+                                            </li>
+                                            <c:forEach begin="1" end="${totalPages}" var="p">
+                                                <li class="page-item ${currentPage == p ? 'active' : ''}">
+                                                    <a class="page-link"
+                                                        href="?page=${p}&search=${search}&status=${status}&sortBy=${sortBy}">${p}</a>
+                                                </li>
+                                            </c:forEach>
+                                            <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                    href="?page=${currentPage + 1}&search=${search}&status=${status}&sortBy=${sortBy}">Next</a>
+                                            </li>
+                                        </ul>
+                                    </c:if>
+                                </nav>
                             </div>
                         </div>
                     </div>

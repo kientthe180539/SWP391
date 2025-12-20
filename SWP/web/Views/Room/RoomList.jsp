@@ -83,15 +83,26 @@
                                         </div>
                                         <div class="room-info">
                                             <h3>Room ${room.roomNumber}</h3>
-                                            <p class="room-description">${room.description}</p>
-                                            <p class="room-description">${type.maxOccupancy}</p>
+                                            <p class="room-description">${room.description != null ? room.description :
+                                                type.description}</p>
+                                            <div class="room-meta">
+                                                <span class="meta-item">👥 ${type.maxOccupancy} Guests</span>
+                                                <span class="meta-item">🏢 Floor ${room.floor}</span>
+                                            </div>
                                             <div class="room-footer">
                                                 <div class="room-price">
-                                                    <span class="price">${type.basePrice}₫</span>
+                                                    <span class="price">
+                                                        <fmt:formatNumber value="${type.basePrice}" type="number"
+                                                            groupingUsed="true" maxFractionDigits="0" />₫
+                                                    </span>
                                                     <span class="per-night">/Night</span>
                                                 </div>
-                                                <a href="room-detail?id=${room.roomId}" class="btn btn-secondary">View
-                                                    Details</a>
+                                                <div class="room-actions">
+                                                    <a href="room-detail?id=${room.roomId}" class="btn btn-outline">View
+                                                        Details</a>
+                                                    <a href="booking?roomId=${room.roomId}" class="btn btn-primary">Book
+                                                        Now</a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
             <!DOCTYPE html>
@@ -301,6 +301,11 @@
                     .report-btn:hover {
                         background: #c0392b;
                     }
+
+                    .action-buttons .report-btn {
+                        margin-top: 0;
+                        /* Override margin-top from .report-btn */
+                    }
                 </style>
             </head>
 
@@ -312,71 +317,94 @@
                         <c:when test="${not empty booking}">
                             <div class="amenity-header">
                                 <div>
-                                                <h2>Room Amenities</h2>
-                                                <div class="room-info">
-                                                    Room ${booking.room.roomNumber} -
-                                                    ${booking.room.roomType.typeName}
+                                    <h2>Room Amenities</h2>
+                                    <div class="room-info">
+                                        Room ${booking.room.roomNumber} -
+                                        ${booking.room.roomType.typeName}
+                                    </div>
+                                </div>
+                                <div class="action-buttons" style="display: flex; gap: 10px; align-items: center;">
+                                    <!-- Actions are now handled per-item in the list below -->
+                                </div>
+                            </div>
+
+                            <c:choose>
+                                <c:when test="${not empty amenityList}">
+                                    <form action="${pageContext.request.contextPath}/customer/amenities" method="POST"
+                                        id="amenityForm">
+                                        <input type="hidden" name="action" value="confirm_amenities">
+                                        <input type="hidden" name="bookingId" value="${booking.bookingId}">
+                                        <input type="hidden" name="roomId" value="${booking.roomId}">
+
+                                        <div class="amenity-grid">
+                                            <c:forEach items="${amenityList}" var="detail">
+                                                <div class="amenity-card">
+                                                    <div class="amenity-icon">
+                                                        <i class="fas fa-concierge-bell"></i>
+                                                    </div>
+                                                    <div class="amenity-name">${detail.amenity.name}</div>
+                                                    <div class="amenity-desc">${detail.amenity.description}</div>
+
+                                                    <div class="amenity-check-section"
+                                                        style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                                                        <input type="hidden" name="name_${detail.amenity.amenityId}"
+                                                            value="${detail.amenity.name}">
+                                                        <div style="display: flex; gap: 15px; justify-content: center;">
+                                                            <label
+                                                                style="cursor: pointer; display: flex; align-items: center; gap: 5px; color: #27ae60;">
+                                                                <input type="radio"
+                                                                    name="status_${detail.amenity.amenityId}" value="OK"
+                                                                    checked required>
+                                                                <i class="fas fa-check"></i> Sufficient
+                                                            </label>
+                                                            <label
+                                                                style="cursor: pointer; display: flex; align-items: center; gap: 5px; color: #e74c3c;">
+                                                                <input type="radio"
+                                                                    name="status_${detail.amenity.amenityId}"
+                                                                    value="MISSING">
+                                                                <i class="fas fa-times"></i> Missing
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="amenity-footer" style="margin-top: 15px;">
+                                                        <div class="amenity-qty">
+                                                            Qty: ${detail.quantityActual}
+                                                        </div>
+                                                        <!-- Removed previous status display as we are now asking for confirmation -->
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <a href="#" class="report-btn" id="openReportModalBtn">
-                                                <i class="fas fa-exclamation-circle"></i> Report Issue
-                                            </a>
+                                            </c:forEach>
                                         </div>
 
-                                        <c:choose>
-                                            <c:when test="${not empty amenityList}">
-                                                <div class="amenity-grid">
-                                                    <c:forEach items="${amenityList}" var="detail">
-                                                        <div class="amenity-card">
-                                                            <div class="amenity-icon">
-                                                                <i class="fas fa-concierge-bell"></i>
-                                                            </div>
-                                                            <div class="amenity-name">${detail.amenity.name}</div>
-                                                            <div class="amenity-desc">${detail.amenity.description}
-                                                            </div>
-                                                            <div class="amenity-footer">
-                                                                <div class="amenity-qty">
-                                                                    Qty: ${detail.quantityActual}
-                                                                </div>
-                                                                <div
-                                                                    class="amenity-status ${detail.conditionStatus != 'OK' ? 'issue' : ''}">
-                                                                    <c:choose>
-                                                                        <c:when
-                                                                            test="${detail.conditionStatus == 'OK'}">
-                                                                            <i class="fas fa-check-circle"></i> Good
-                                                                            Condition
-                                                                        </c:when>
-                                                                        <c:otherwise>
-                                                                            <i class="fas fa-exclamation-triangle"></i>
-                                                                            ${detail.conditionStatus}
-                                                                        </c:otherwise>
-                                                                    </c:choose>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </c:forEach>
-                                                </div>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <div class="empty-state">
-                                                    <i class="fas fa-box-open"></i>
-                                                    <h3>No Amenities Listed</h3>
-                                                    <p>There are no amenity records for this room inspection.</p>
-                                                </div>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <div class="empty-state">
-                                            <i class="fas fa-door-closed"></i>
-                                            <h3>No Active Room Found</h3>
-                                            <p>You need to be checked into a room to view amenities.</p>
-                                            <a href="${pageContext.request.contextPath}/" class="report-btn"
-                                                style="background: #3498db;">Back to Home</a>
+                                        <div style="text-align: center; margin-top: 30px;">
+                                            <button type="submit" class="submit-btn"
+                                                style="max-width: 300px; font-size: 18px;">
+                                                <i class="fas fa-paper-plane"></i> Submit Inspection
+                                            </button>
                                         </div>
-                                    </c:otherwise>
-                                </c:choose>
+                                    </form>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="empty-state">
+                                        <i class="fas fa-box-open"></i>
+                                        <h3>No Amenities Listed</h3>
+                                        <p>There are no amenity records for this room inspection.</p>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="empty-state">
+                                <i class="fas fa-door-closed"></i>
+                                <h3>No Active Room Found</h3>
+                                <p>You need to be checked into a room to view amenities.</p>
+                                <a href="${pageContext.request.contextPath}/" class="report-btn"
+                                    style="background: #3498db;">Back to Home</a>
                             </div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
                 </div>
 
                 <div id="reportModal" class="modal">

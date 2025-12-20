@@ -46,9 +46,29 @@
             </ul>
 
             <div class="sidebar-footer">
-                <a href="<c:url value='/logout'/>" class="nav-link text-danger">
+                <a href="javascript:void(0)" onclick="confirmLogout()" class="nav-link text-danger">
                     <i class="bi bi-box-arrow-right"></i>
                     <span>Logout</span>
                 </a>
             </div>
         </aside>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Confirm Logout',
+                    text: 'Are you sure you want to logout?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Logout',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '<c:url value="/logout"/>';
+                    }
+                });
+            }
+        </script>

@@ -18,19 +18,70 @@
                     <jsp:include page="../Shared/Header.jsp" />
 
                     <div class="container-fluid p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2>Issue Management</h2>
+                        </div>
+
                         <div class="card shadow-sm">
                             <div class="card-header bg-white py-3">
-                                <h5 class="mb-0"><i class="bi bi-tools me-2"></i>Reported Issues</h5>
+                                <form action="<c:url value='/manager/issues'/>" method="get">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-light border-end-0"><i
+                                                        class="bi bi-search"></i></span>
+                                                <input type="text" name="search" class="form-control border-start-0"
+                                                    placeholder="Search description/room..." value="${search}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <select name="type" class="form-select form-select-sm">
+                                                <option value="">All Types</option>
+                                                <option value="SUPPLY" ${type=='SUPPLY' ? 'selected' : '' }>Supply
+                                                </option>
+                                                <option value="EQUIPMENT" ${type=='EQUIPMENT' ? 'selected' : '' }>
+                                                    Equipment</option>
+                                                <option value="OTHER" ${type=='OTHER' ? 'selected' : '' }>Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <select name="status" class="form-select form-select-sm">
+                                                <option value="">All Status</option>
+                                                <option value="NEW" ${status=='NEW' ? 'selected' : '' }>New</option>
+                                                <option value="IN_PROGRESS" ${status=='IN_PROGRESS' ? 'selected' : '' }>
+                                                    In Progress</option>
+                                                <option value="RESOLVED" ${status=='RESOLVED' ? 'selected' : '' }>
+                                                    Resolved</option>
+                                                <option value="CLOSED" ${status=='CLOSED' ? 'selected' : '' }>Closed
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select name="sortBy" class="form-select form-select-sm">
+                                                <option value="created_at" ${sortBy=='created_at' ? 'selected' : '' }>
+                                                    Sort by Date</option>
+                                                <option value="room_id" ${sortBy=='room_id' ? 'selected' : '' }>Sort by
+                                                    Room</option>
+                                                <option value="priority" ${sortBy=='priority' ? 'selected' : '' }>Sort
+                                                    by Priority</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle">
+                                    <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Room</th>
                                                 <th>Type</th>
                                                 <th>Description</th>
+                                                <th>Date</th>
                                                 <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -39,14 +90,35 @@
                                             <c:forEach items="${issues}" var="i">
                                                 <tr>
                                                     <td>#${i.issueId}</td>
-                                                    <td>${i.roomId}</td>
-                                                    <td>${i.issueType}</td>
-                                                    <td>${i.description}</td>
+                                                    <td class="fw-bold">
+                                                        <c:choose>
+                                                            <c:when test="${not empty i.roomNumber}">
+                                                                Room ${i.roomNumber}
+                                                            </c:when>
+                                                            <c:otherwise>Room ${i.roomId}</c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${i.issueType == 'CONFIRMATION'}">
+                                                                <span
+                                                                    class="badge text-bg-info text-white">CONFIRMATION</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span
+                                                                    class="badge bg-light text-dark border">${i.issueType}</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td class="text-truncate" style="max-width: 250px;"
+                                                        title="${i.description}">${i.description}</td>
+                                                    <td>${i.createdAt}</td>
                                                     <td>
                                                         <span
                                                             class="badge rounded-pill 
                                                     ${i.status == 'NEW' ? 'text-bg-danger' : 
-                                                      i.status == 'RESOLVED' ? 'text-bg-success' : 'text-bg-secondary'}">
+                                                      i.status == 'RESOLVED' ? 'text-bg-success' : 
+                                                      i.status == 'IN_PROGRESS' ? 'text-bg-warning' : 'text-bg-secondary'}">
                                                             ${i.status}
                                                         </span>
                                                     </td>
@@ -64,53 +136,42 @@
                                                     </td>
                                                 </tr>
                                             </c:forEach>
+                                            <c:if test="${empty issues}">
+                                                <tr>
+                                                    <td colspan="7" class="text-center py-5 text-muted">
+                                                        <i class="bi bi-check2-circle fs-1 d-block mb-2"></i>
+                                                        No issues found.
+                                                    </td>
+                                                </tr>
+                                            </c:if>
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
 
-                            <!-- Pagination Info -->
-                            <div class="card-footer bg-white">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="text-muted">
-                                        Showing ${(currentPage - 1) * pageSize + 1} to ${(currentPage - 1) * pageSize +
-                                        issues.size()} of ${totalIssues} issues
-                                    </div>
+                            <!-- Pagination -->
+                            <div class="card-footer bg-white py-3">
+                                <nav class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Showing ${issues.size()} of ${totalIssues} issues</small>
                                     <c:if test="${totalPages > 1}">
-                                        <nav>
-                                            <ul class="pagination mb-0">
-                                                <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                                    <a class="page-link" href="?page=${currentPage - 1}">
-                                                        <i class="bi bi-chevron-left"></i>
-                                                    </a>
+                                        <ul class="pagination pagination-sm mb-0">
+                                            <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                    href="?page=${currentPage - 1}&search=${search}&status=${status}&type=${type}&sortBy=${sortBy}">Previous</a>
+                                            </li>
+                                            <c:forEach begin="1" end="${totalPages}" var="p">
+                                                <li class="page-item ${currentPage == p ? 'active' : ''}">
+                                                    <a class="page-link"
+                                                        href="?page=${p}&search=${search}&status=${status}&type=${type}&sortBy=${sortBy}">${p}</a>
                                                 </li>
-
-                                                <c:forEach begin="1" end="${totalPages}" var="i">
-                                                    <c:if
-                                                        test="${i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2)}">
-                                                        <li class="page-item ${currentPage == i ? 'active' : ''}">
-                                                            <a class="page-link" href="?page=${i}">${i}</a>
-                                                        </li>
-                                                    </c:if>
-                                                    <c:if test="${i == 2 && currentPage > 4}">
-                                                        <li class="page-item disabled"><span
-                                                                class="page-link">...</span></li>
-                                                    </c:if>
-                                                    <c:if test="${i == totalPages - 1 && currentPage < totalPages - 3}">
-                                                        <li class="page-item disabled"><span
-                                                                class="page-link">...</span></li>
-                                                    </c:if>
-                                                </c:forEach>
-
-                                                <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                                                    <a class="page-link" href="?page=${currentPage + 1}">
-                                                        <i class="bi bi-chevron-right"></i>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
+                                            </c:forEach>
+                                            <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                    href="?page=${currentPage + 1}&search=${search}&status=${status}&type=${type}&sortBy=${sortBy}">Next</a>
+                                            </li>
+                                        </ul>
                                     </c:if>
-                                </div>
+                                </nav>
                             </div>
                         </div>
                     </div>

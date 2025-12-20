@@ -25,21 +25,7 @@
                                         <h4 class="mb-0">New Replenishment Request</h4>
                                     </div>
                                     <div class="card-body p-4">
-                                        <c:if test="${not empty mess}">
-                                            <div class="alert alert-${type == 'success' ? 'success' : 'danger'} alert-dismissible fade show"
-                                                role="alert">
-                                                ${mess}
-                                                <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <c:if test="${type == 'success'}">
-                                                <script>
-                                                    setTimeout(function () {
-                                                        window.location.href = "<c:url value='/${href}'/>";
-                                                    }, 1500);
-                                                </script>
-                                            </c:if>
-                                        </c:if>
+                                        <jsp:include page="../public/notify.jsp" />
 
                                         <form action="<c:url value='/housekeeping/create-replenishment'/>"
                                             method="POST">
@@ -99,6 +85,57 @@
                 </div>
             </div>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const roomSelect = document.getElementById('roomId');
+                    const amenitySelect = document.getElementById('amenityId');
+                    const quantityInput = document.getElementById('quantity');
+                    const quantityLabel = document.querySelector('label[for="quantity"]');
+
+                    // If room is already selected (e.g. from previous error), load amenities?
+                    // For now, let's rely on change event.
+
+                    roomSelect.addEventListener('change', function () {
+                        const roomId = this.value;
+                        if (!roomId) return;
+
+                        // Check if we are checking out URL params? No, we use AJAX path.
+                        fetch('<c:url value="/housekeeping/get-room-amenities"/>?roomId=' + roomId)
+                            .then(response => response.text())
+                            .then(html => {
+                                amenitySelect.innerHTML = html;
+                                // Reset quantity details
+                                quantityInput.removeAttribute('max');
+                                quantityLabel.textContent = 'Quantity Requested';
+                            })
+                            .catch(err => console.error('Error loading amenities:', err));
+                    });
+
+                    amenitySelect.addEventListener('change', function () {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const maxQty = selectedOption.getAttribute('data-max');
+
+                        if (maxQty) {
+                            quantityInput.max = maxQty;
+                            quantityLabel.textContent = `Quantity Requested (Max: ${maxQty})`;
+                            // Clamp value if needed?
+                            if (parseInt(quantityInput.value) > parseInt(maxQty)) {
+                                quantityInput.value = maxQty;
+                            }
+                        } else {
+                            quantityInput.removeAttribute('max');
+                            quantityLabel.textContent = 'Quantity Requested';
+                        }
+                    });
+
+                    quantityInput.addEventListener('input', function () {
+                        const max = parseInt(this.max);
+                        if (!isNaN(max) && parseInt(this.value) > max) {
+                            this.value = max;
+                        }
+                    });
+                });
+            </script>
         </body>
 
         </html>

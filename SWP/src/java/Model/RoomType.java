@@ -14,10 +14,10 @@ public class RoomType {
     }
 
     public RoomType(Integer roomTypeId,
-                    String typeName,
-                    String description,
-                    BigDecimal basePrice,
-                    Integer maxOccupancy) {
+            String typeName,
+            String description,
+            BigDecimal basePrice,
+            Integer maxOccupancy) {
 
         setRoomTypeId(roomTypeId);
         setTypeName(typeName);

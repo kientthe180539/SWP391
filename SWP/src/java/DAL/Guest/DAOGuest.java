@@ -18,12 +18,9 @@ public class DAOGuest extends DAO {
     }
 
     /**
-     * Lấy danh sách phòng có trạng thái AVAILABLE và filter theo roomTypeId,
-     * minPrice, maxPrice Có phân trang
-     */
-    /**
-     * Lấy danh sách phòng có trạng thái AVAILABLE và filter theo roomTypeId,
-     * minPrice, maxPrice, checkIn, checkOut Có phân trang
+     * Get available rooms filtered by roomTypeId, minPrice, maxPrice, checkIn,
+     * checkOut
+     * Uses room_status_periods table for date-range availability checking
      */
     public List<Map.Entry<Room, RoomType>> getAvailableRooms(
             Integer roomTypeId,
@@ -36,14 +33,14 @@ public class DAOGuest extends DAO {
         List<Map.Entry<Room, RoomType>> list = new ArrayList<>();
         int offset = (page - 1) * pageSize;
 
-        // Base query: Active rooms not in MAINTENANCE
+        // Base query: Active rooms
         String sql = """
                     SELECT r.*,
                            rt.room_type_id AS rt_id, rt.type_name, rt.description AS rt_desc,
                            rt.base_price, rt.max_occupancy
                     FROM rooms r
                     JOIN room_types rt ON r.room_type_id = rt.room_type_id
-                    WHERE r.is_active = 1 AND r.status != 'MAINTENANCE' AND r.status != 'DIRTY'
+                    WHERE r.is_active = 1 AND r.status != 'MAINTENANCE'
                 """;
 
         List<Object> params = new ArrayList<>();
@@ -63,22 +60,23 @@ public class DAOGuest extends DAO {
             params.add(maxPrice);
         }
 
-        // Date range filter: Exclude rooms with overlapping bookings
+        // Date range filter: Use room_status_periods to check availability
         if (checkIn != null && checkOut != null) {
+            // Exclude rooms that have blocking status periods overlapping with requested
+            // dates
             sql += """
                     AND NOT EXISTS (
-                        SELECT 1 FROM bookings b
-                        WHERE b.room_id = r.room_id
-                        AND b.status IN ('PENDING', 'CONFIRMED', 'CHECKED_IN')
-                        AND b.checkin_date < ? AND b.checkout_date > ?
+                        SELECT 1 FROM room_status_periods rsp
+                        WHERE rsp.room_id = r.room_id
+                        AND rsp.status IN ('BOOKED', 'OCCUPIED', 'MAINTENANCE')
+                        AND rsp.start_date < ? AND rsp.end_date > ?
                     )
                     """;
-            params.add(checkOut); // Note: Logic overlap is (StartA < EndB) and (EndA > StartB)
-            params.add(checkIn);
-        } else {
-            // Fallback: If no dates selected, show currently available rooms
-            sql += " AND r.status = 'AVAILABLE' ";
+            params.add(checkOut); // start_date < checkOut
+            params.add(checkIn); // end_date > checkIn
         }
+        // When no dates selected, show all active rooms (don't filter by current
+        // status)
 
         sql += " ORDER BY r.room_number LIMIT ? OFFSET ?";
         params.add(pageSize);
@@ -119,7 +117,8 @@ public class DAOGuest extends DAO {
     }
 
     /**
-     * Đếm tổng số phòng AVAILABLE để phân trang
+     * Count available rooms for pagination
+     * Uses room_status_periods table for date-range availability checking
      */
     public int countAvailableRooms(Integer roomTypeId, java.time.LocalDate checkIn, java.time.LocalDate checkOut) {
         String sql = """
@@ -136,20 +135,20 @@ public class DAOGuest extends DAO {
             params.add(roomTypeId);
         }
 
+        // Date range filter: Use room_status_periods
         if (checkIn != null && checkOut != null) {
             sql += """
                     AND NOT EXISTS (
-                        SELECT 1 FROM bookings b
-                        WHERE b.room_id = r.room_id
-                        AND b.status IN ('PENDING', 'CONFIRMED', 'CHECKED_IN')
-                        AND b.checkin_date < ? AND b.checkout_date > ?
+                        SELECT 1 FROM room_status_periods rsp
+                        WHERE rsp.room_id = r.room_id
+                        AND rsp.status IN ('BOOKED', 'OCCUPIED', 'MAINTENANCE')
+                        AND rsp.start_date < ? AND rsp.end_date > ?
                     )
                     """;
             params.add(checkOut);
             params.add(checkIn);
-        } else {
-            sql += " AND r.status = 'AVAILABLE' ";
         }
+        // When no dates selected, count all active rooms
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             for (int i = 0; i < params.size(); i++) {

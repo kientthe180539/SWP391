@@ -16,8 +16,11 @@ public class SendEmail {
      */
     public static void sendMail(String sentTo, String title, String content) {
         // Email account credentials
-        final String username = "trantrungtoan17092003@gmail.com";
-        final String password = "buay rvyn btzz yxpo";
+//        final String username = "trantrungtoan17092003@gmail.com";
+//        final String password = "nlps rmti aasy hgal";
+
+        final String username = "kienga445@gmail.com";
+        final String password = "yyil ebfq urtu kxpa";
         // Set up email server properties
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -37,8 +40,8 @@ public class SendEmail {
             message.setFrom(new InternetAddress(username)); // Set sender
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(sentTo)); // Set recipient
             message.setSubject(title); // Set email subject
-            // Set content as HTML
-            message.setContent(content, "text/html");
+            // Set content as HTML with UTF-8 encoding
+            message.setContent(content, "text/html; charset=UTF-8");
             // Send the email
             Transport.send(message);
             System.out.println("Email sent successfully!");
@@ -47,7 +50,8 @@ public class SendEmail {
             System.out.println("Error at :" + e.getMessage());
         }
     }
+
     public static void main(String[] args) {
-        SendEmail.sendMail("phongnnhe176274@fpt.edu.vn", "hello TPA", "<h1>qua dep</h1>");
+        SendEmail.sendMail("tpashop123321@gmail.com", "hello TPA", "<h1>qua dep</h1>");
     }
 }

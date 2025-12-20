@@ -27,19 +27,20 @@
                             </div>
                         </div>
 
-                        <c:if test="${not empty param.error}">
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                Inspection submission failed. Please try again.
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                    aria-label="Close"></button>
-                            </div>
-                        </c:if>
 
-                        <form action="inspection" method="post" id="inspectionForm">
+                        <c:if test="${not empty param.error}">
+                            <c:set var="type" value="error" scope="request" />
+                            <c:set var="mess" value="Inspection submission failed. Please try again." scope="request" />
+                        </c:if>
+                        <jsp:include page="../public/notify.jsp" />
+
+                        <form action="inspection" method="post" id="inspectionForm"
+                            onsubmit="return confirm('Are you sure you want to submit this inspection?');">
                             <input type="hidden" name="action" value="submit">
                             <input type="hidden" name="roomId" value="${room.roomId}">
                             <input type="hidden" name="bookingId" value="${bookingId}">
                             <input type="hidden" name="type" value="${type}">
+                            <input type="hidden" name="taskId" value="${param.taskId}">
 
                             <div class="row g-4">
                                 <div class="col-lg-8">
@@ -98,14 +99,14 @@
                                                     <thead class="bg-light">
                                                         <tr>
                                                             <th class="ps-4">Amenity</th>
+                                                            <th style="width: 80px;">Standard Qty</th>
                                                             <c:if
                                                                 test="${type == 'CHECKOUT' && checkinInspection != null}">
-                                                                <th style="width: 100px;">Expected</th>
+                                                                <th style="width: 100px;">At Check-in</th>
                                                             </c:if>
-                                                            <th style="width: 100px;">Qty</th>
+                                                            <th style="width: 100px;" class="text-center">Verified</th>
                                                             <th style="width: 150px;">Status</th>
                                                             <th>Comment</th>
-                                                            <th style="width: 100px;">Actions</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -125,25 +126,35 @@
                                                                 <td class="ps-4">
                                                                     <input type="hidden" name="amenityId"
                                                                         value="${rta.amenityId}">
+                                                                    <!-- Store quantity as hidden field -->
+                                                                    <input type="hidden"
+                                                                        name="quantity_${rta.amenityId}"
+                                                                        value="${checkinDetail != null ? checkinDetail.quantityActual : rta.defaultQuantity}">
                                                                     <span class="fw-bold">${rta.amenity.name}</span>
-                                                                    <div class="small text-muted">Default:
-                                                                        ${rta.defaultQuantity}</div>
+                                                                </td>
+                                                                <td>
+                                                                    <span
+                                                                        class="badge bg-secondary">${rta.defaultQuantity}</span>
                                                                 </td>
                                                                 <c:if
                                                                     test="${type == 'CHECKOUT' && checkinDetail != null}">
                                                                     <td>
                                                                         <span
-                                                                            class="badge bg-secondary">${checkinDetail.quantityActual}</span>
+                                                                            class="badge bg-info">${checkinDetail.quantityActual}</span>
                                                                         <div class="small text-muted">
                                                                             ${checkinDetail.conditionStatus}</div>
                                                                     </td>
                                                                 </c:if>
-                                                                <td>
-                                                                    <input type="number"
-                                                                        class="form-control amenity-quantity"
-                                                                        name="quantity_${rta.amenityId}"
-                                                                        value="${checkinDetail != null ? checkinDetail.quantityActual : rta.defaultQuantity}"
-                                                                        min="0" required>
+                                                                <td class="text-center">
+                                                                    <div
+                                                                        class="form-check d-flex justify-content-center">
+                                                                        <input type="checkbox"
+                                                                            class="form-check-input amenity-verified"
+                                                                            name="verified_${rta.amenityId}"
+                                                                            value="true"
+                                                                            style="width: 24px; height: 24px; cursor: pointer;"
+                                                                            checked>
+                                                                    </div>
                                                                 </td>
                                                                 <td>
                                                                     <select class="form-select amenity-status"
@@ -158,15 +169,6 @@
                                                                     <input type="text" class="form-control"
                                                                         name="comment_${rta.amenityId}"
                                                                         placeholder="Optional note...">
-                                                                </td>
-                                                                <td>
-                                                                    <button type="button"
-                                                                        class="btn btn-sm btn-warning request-replenishment-btn"
-                                                                        data-amenity-id="${rta.amenityId}"
-                                                                        data-amenity-name="${rta.amenity.name}"
-                                                                        style="display: none;">
-                                                                        <i class="bi bi-box-seam"></i> Request
-                                                                    </button>
                                                                 </td>
                                                             </tr>
                                                         </c:forEach>
@@ -210,8 +212,8 @@
                                             <div class="d-grid">
                                                 <button type="submit" class="btn btn-primary btn-lg">Submit
                                                     Inspection</button>
-                                                <a href="javascript:history.back()"
-                                                    class="btn btn-light mt-2">Cancel</a>
+                                                <a href="<c:url value='/housekeeping/tasks'/>"
+                                                    class="btn btn-light mt-2">Back to Tasks</a>
                                             </div>
                                         </div>
                                     </div>
@@ -223,84 +225,38 @@
                 </div>
             </div>
 
-            <!-- Replenishment Request Modal -->
-            <div class="modal fade" id="replenishmentModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Request Replenishment</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Request replenishment for: <strong id="modalAmenityName"></strong></p>
-                            <input type="hidden" id="modalAmenityId">
-                            <div class="mb-3">
-                                <label class="form-label">Quantity Needed</label>
-                                <input type="number" class="form-control" id="modalQuantity" min="1" value="1" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Reason</label>
-                                <textarea class="form-control" id="modalReason" rows="3" required
-                                    placeholder="Explain why this item needs replenishment..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="submitReplenishmentBtn">Submit
-                                Request</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
             <script>
-                // Show/hide request replenishment button based on status
+                // Auto-uncheck verification when status is not OK
                 document.querySelectorAll('.amenity-status').forEach(select => {
                     select.addEventListener('change', function () {
                         const row = this.closest('tr');
-                        const btn = row.querySelector('.request-replenishment-btn');
-                        if (this.value === 'DAMAGED' || this.value === 'MISSING') {
-                            btn.style.display = 'inline-block';
-                        } else {
-                            btn.style.display = 'none';
+                        const checkbox = row.querySelector('.amenity-verified');
+                        if (this.value !== 'OK') {
+                            checkbox.checked = false;
                         }
                     });
                 });
 
-                // Handle replenishment request modal
-                const replenishmentModal = new bootstrap.Modal(document.getElementById('replenishmentModal'));
+                function confirmSubmit(event, title, text) {
+                    event.preventDefault();
+                    const form = event.target;
 
-                document.querySelectorAll('.request-replenishment-btn').forEach(btn => {
-                    btn.addEventListener('click', function () {
-                        const amenityId = this.dataset.amenityId;
-                        const amenityName = this.dataset.amenityName;
-                        const row = this.closest('tr');
-                        const quantity = row.querySelector('.amenity-quantity').value;
-
-                        document.getElementById('modalAmenityId').value = amenityId;
-                        document.getElementById('modalAmenityName').textContent = amenityName;
-                        document.getElementById('modalQuantity').value = quantity;
-
-                        replenishmentModal.show();
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, proceed!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
                     });
-                });
-
-                document.getElementById('submitReplenishmentBtn').addEventListener('click', function () {
-                    const amenityId = document.getElementById('modalAmenityId').value;
-                    const quantity = document.getElementById('modalQuantity').value;
-                    const reason = document.getElementById('modalReason').value;
-
-                    if (!reason.trim()) {
-                        alert('Please provide a reason for the replenishment request');
-                        return;
-                    }
-
-                    // Note: This requires an inspection to already be created
-                    // In practice, you might need to save inspection first or handle this differently
-                    alert('Replenishment request feature requires inspection to be submitted first. Please submit the inspection, then create replenishment requests from the inspection history page.');
-                    replenishmentModal.hide();
-                });
+                    return false;
+                }
             </script>
         </body>
 

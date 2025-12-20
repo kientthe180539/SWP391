@@ -232,6 +232,7 @@ body {
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(30, 60, 114, 0.4);
+    color: white;
 }
 
 .btn-secondary {
@@ -243,6 +244,44 @@ body {
 .btn-secondary:hover {
     background: #2a5298;
     color: white;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #2a5298;
+    border: 2px solid #2a5298;
+}
+
+.btn-outline:hover {
+    background: #2a5298;
+    color: white;
+}
+
+/* Room Meta Info */
+.room-meta {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    font-size: 13px;
+    color: #666;
+    background: #f5f7fa;
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+/* Room Actions */
+.room-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.room-actions .btn {
+    padding: 10px 16px;
+    font-size: 14px;
 }
 
 /* No Results */

@@ -53,10 +53,18 @@
                             <c:when test="${sessionScope.currentUser.roleId == 6}">
                                 <li class="nav-header">Overview</li>
                                 <li class="nav-item">
+                                <li class="nav-item">
                                     <a href="<c:url value='/manager/dashboard'/>"
                                         class="nav-link ${pageContext.request.servletPath.endsWith('Dashboard.jsp') ? 'active' : ''}">
                                         <i class="bi bi-speedometer2"></i>
                                         <span>Dashboard</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="<c:url value='/manager/schedule'/>"
+                                        class="nav-link ${pageContext.request.servletPath.endsWith('ViewSchedule.jsp') ? 'active' : ''}">
+                                        <i class="bi bi-calendar-week"></i>
+                                        <span>Work Schedule</span>
                                     </a>
                                 </li>
 
@@ -75,13 +83,7 @@
                                         <span>Reservations</span>
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="<c:url value='/manager/housekeeping'/>"
-                                        class="nav-link ${pageContext.request.servletPath.endsWith('Housekeeping.jsp') ? 'active' : ''}">
-                                        <i class="bi bi-bucket"></i>
-                                        <span>Housekeeping Overview</span>
-                                    </a>
-                                </li>
+
                                 <li class="nav-item">
                                     <a href="<c:url value='/manager/inspections'/>"
                                         class="nav-link ${pageContext.request.servletPath.endsWith('InspectionList.jsp') ? 'active' : ''}">
@@ -89,13 +91,13 @@
                                         <span>Inspections</span>
                                     </a>
                                 </li>
-                                <li class="nav-item">
+<!--                                <li class="nav-item">
                                     <a href="<c:url value='/manager/replenishment-requests'/>"
                                         class="nav-link ${pageContext.request.servletPath.endsWith('ReplenishmentRequests.jsp') ? 'active' : ''}">
                                         <i class="bi bi-box-seam"></i>
                                         <span>Replenishment</span>
                                     </a>
-                                </li>
+                                </li>-->
                                 <li class="nav-item">
                                     <a href="<c:url value='/manager/create-task'/>"
                                         class="nav-link ${pageContext.request.servletPath.endsWith('CreateTask.jsp') ? 'active' : ''}">
@@ -138,24 +140,39 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="<c:url value='/housekeeping/tasks'><c:param name='type' value='CLEANING'/></c:url>"
-                                            class="nav-link ${param.type == 'CLEANING' ? 'active' : ''}">
-                                            <i class="bi bi-bucket"></i>
-                                            <span>Cleaning Tasks</span>
+                                        <a href="<c:url value='/housekeeping/schedule'/>"
+                                            class="nav-link ${pageContext.request.servletPath.endsWith('ViewSchedule.jsp') ? 'active' : ''}">
+                                            <i class="bi bi-calendar-week"></i>
+                                            <span>My Schedule</span>
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="<c:url value='/housekeeping/rooms'/>"
-                                            class="nav-link ${pageContext.request.servletPath.endsWith('RoomList.jsp') ? 'active' : ''}">
-                                            <i class="bi bi-door-open"></i>
-                                            <span>Room Status</span>
+                                        <a href="<c:url value='/housekeeping/tasks'/>"
+                                            class="nav-link ${pageContext.request.servletPath.endsWith('TaskList.jsp') ? 'active' : ''}">
+                                            <i class="bi bi-list-check"></i>
+                                            <span>My Tasks</span>
                                         </a>
                                     </li>
-                                    <li class="nav-item">
+
+<!--                                    <li class="nav-item">
                                         <a href="<c:url value='/housekeeping/supplies'/>"
                                             class="nav-link ${pageContext.request.servletPath.endsWith('Supplies.jsp') ? 'active' : ''}">
                                             <i class="bi bi-box-seam"></i>
                                             <span>Supplies</span>
+                                        </a>
+                                    </li>-->
+                                    <li class="nav-item">
+                                        <a href="<c:url value='/housekeeping/history'/>"
+                                            class="nav-link ${pageContext.request.servletPath.endsWith('TaskHistory.jsp') ? 'active' : ''}">
+                                            <i class="bi bi-clock-history"></i>
+                                            <span>Task History</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="<c:url value='/housekeeping/my-issues'/>"
+                                            class="nav-link ${pageContext.request.servletPath.endsWith('MyIssueList.jsp') || pageContext.request.servletPath.endsWith('IssueReport.jsp') ? 'active' : ''}">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                            <span>My Issues</span>
                                         </a>
                                     </li>
                                 </c:when>
@@ -163,9 +180,29 @@
             </ul>
 
             <div class="sidebar-footer">
-                <a href="<c:url value='/logout'/>" class="nav-link text-danger">
+                <a href="javascript:void(0)" onclick="confirmLogout()" class="nav-link text-danger">
                     <i class="bi bi-box-arrow-right"></i>
                     <span>Logout</span>
                 </a>
             </div>
         </aside>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Confirm Logout',
+                    text: 'Are you sure you want to logout?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Logout',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '<c:url value="/logout"/>';
+                    }
+                });
+            }
+        </script>

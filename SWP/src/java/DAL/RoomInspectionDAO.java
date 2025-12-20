@@ -70,7 +70,7 @@ public class RoomInspectionDAO extends DAO {
 
     public List<RoomInspection> getInspectionsByRoom(int roomId) {
         List<RoomInspection> list = new ArrayList<>();
-        String sql = "SELECT * FROM room_inspections WHERE room_id = ? ORDER BY inspection_date DESC";
+        String sql = "SELECT ri.*, u.full_name FROM room_inspections ri LEFT JOIN users u ON ri.inspector_id = u.user_id WHERE ri.room_id = ? ORDER BY ri.inspection_date DESC";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, roomId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -85,16 +85,56 @@ public class RoomInspectionDAO extends DAO {
     }
 
     public List<RoomInspection> getRecentInspections(int limit) {
+        return getInspections(null, null, null, 1, limit);
+    }
+
+    public List<RoomInspection> getInspections(String type, String search, String sortBy, int page, int pageSize) {
         List<RoomInspection> list = new ArrayList<>();
-        String sql = "SELECT ri.*, r.room_number, u.full_name, c.full_name AS customer_name " +
-                "FROM room_inspections ri " +
-                "LEFT JOIN rooms r ON ri.room_id = r.room_id " +
-                "LEFT JOIN users u ON ri.inspector_id = u.user_id " +
-                "LEFT JOIN bookings b ON ri.booking_id = b.booking_id " +
-                "LEFT JOIN users c ON b.customer_id = c.user_id " +
-                "ORDER BY ri.inspection_date DESC LIMIT ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, limit);
+        StringBuilder sql = new StringBuilder(
+                "SELECT ri.*, r.room_number, u.full_name, c.full_name AS customer_name " +
+                        "FROM room_inspections ri " +
+                        "LEFT JOIN rooms r ON ri.room_id = r.room_id " +
+                        "LEFT JOIN users u ON ri.inspector_id = u.user_id " +
+                        "LEFT JOIN bookings b ON ri.booking_id = b.booking_id " +
+                        "LEFT JOIN users c ON b.customer_id = c.user_id " +
+                        "WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        if (type != null && !type.isBlank() && !"ALL".equals(type)) {
+            sql.append("AND ri.type = ? ");
+            params.add(type);
+        }
+
+        if (search != null && !search.isBlank()) {
+            sql.append("AND (ri.note LIKE ? OR r.room_number LIKE ? OR u.full_name LIKE ?) ");
+            String query = "%" + search + "%";
+            params.add(query);
+            params.add(query);
+            params.add(query);
+        }
+
+        // Sorting
+        sql.append("ORDER BY ");
+        if (sortBy != null) {
+            switch (sortBy) {
+                case "room_id" -> sql.append("r.room_number ASC, ri.inspection_date DESC ");
+                case "inspector_id" -> sql.append("u.full_name ASC, ri.inspection_date DESC ");
+                default -> sql.append("ri.inspection_date DESC ");
+            }
+        } else {
+            sql.append("ri.inspection_date DESC ");
+        }
+
+        // Pagination
+        sql.append("LIMIT ? OFFSET ? ");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapInspection(rs));
@@ -104,6 +144,44 @@ public class RoomInspectionDAO extends DAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public int countInspections(String type, String search) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) " +
+                        "FROM room_inspections ri " +
+                        "LEFT JOIN rooms r ON ri.room_id = r.room_id " +
+                        "LEFT JOIN users u ON ri.inspector_id = u.user_id " +
+                        "WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        if (type != null && !type.isBlank() && !"ALL".equals(type)) {
+            sql.append("AND ri.type = ? ");
+            params.add(type);
+        }
+
+        if (search != null && !search.isBlank()) {
+            sql.append("AND (ri.note LIKE ? OR r.room_number LIKE ? OR u.full_name LIKE ?) ");
+            String query = "%" + search + "%";
+            params.add(query);
+            params.add(query);
+            params.add(query);
+        }
+
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public RoomInspection getInspectionById(int id) {

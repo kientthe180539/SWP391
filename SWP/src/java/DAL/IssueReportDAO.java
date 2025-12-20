@@ -65,17 +65,17 @@ public class IssueReportDAO extends DAO {
         report.setReportedBy(rs.getInt("reported_by"));
 
         try {
-            report.setIssueType(IssueReport.IssueType.valueOf(rs.getString("issue_type")));
+            report.setIssueType(IssueType.valueOf(rs.getString("issue_type")));
         } catch (Exception e) {
-            report.setIssueType(IssueReport.IssueType.OTHER);
+            report.setIssueType(IssueType.OTHER);
         }
 
         report.setDescription(rs.getString("description"));
 
         try {
-            report.setStatus(IssueReport.IssueStatus.valueOf(rs.getString("status")));
+            report.setStatus(IssueStatus.valueOf(rs.getString("status")));
         } catch (Exception e) {
-            report.setStatus(IssueReport.IssueStatus.NEW);
+            report.setStatus(IssueStatus.NEW);
         }
 
         Timestamp cAt = rs.getTimestamp("created_at");

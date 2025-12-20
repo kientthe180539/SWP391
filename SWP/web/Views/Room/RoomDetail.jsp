@@ -58,24 +58,23 @@
                                     <div class="detail-item">
                                         <span class="price-label">Price per night</span>
                                         <span class="price">
-                                            <c:out value='${roomType.basePrice}' />₫
+                                            <fmt:formatNumber value="${roomType.basePrice}" type="number"
+                                                groupingUsed="true" maxFractionDigits="0" />₫
                                         </span>
                                         <span class="per-night">/Night</span>
                                     </div>
-                                    <c:choose>
-                                        <c:when test="${room.status == 'AVAILABLE'}">
-                                            <a href="booking?roomId=${room.roomId}" class="btn btn-primary btn-lg">Book
-                                                room</a>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <span class="btn btn-secondary btn-lg disabled">Room not available</span>
-                                        </c:otherwise>
-                                    </c:choose>
+                                    <a href="booking?roomId=${room.roomId}" class="btn btn-primary btn-lg">🛏️ Book
+                                        Now</a>
                                 </div>
                             </div>
 
                             <!-- Description -->
                             <div class="description">
+                                <h3>Room Description</h3>
+                                <p>
+                                    <c:out
+                                        value='${room.description != null ? room.description : roomType.description}' />
+                                </p>
                             </div>
 
                             <!-- Amenities -->
@@ -179,9 +178,6 @@
                             function changeImage(thumbnail) {
                                 const mainImage = document.getElementById('mainImage');
                                 mainImage.src = thumbnail.src;
-
-            <h3>Mô Tả Phòng</h3>
-        <p><c:out value='${room.description != null ? room.description : roomType.description}'/></p>
                                 document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
                                 thumbnail.classList.add('active');
                             }

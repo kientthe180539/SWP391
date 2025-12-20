@@ -24,7 +24,9 @@ public class HousekeepingTask {
 
     private Integer taskId;
     private Integer roomId;
+    private String roomNumber; // Transient field for display
     private Integer assignedTo;
+    private String assignedToName; // Transient field for display
     private LocalDate taskDate;
     private TaskType taskType;
     private TaskStatus status;
@@ -78,6 +80,14 @@ public class HousekeepingTask {
         this.roomId = roomId;
     }
 
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public void setRoomNumber(String roomNumber) {
+        this.roomNumber = roomNumber;
+    }
+
     public Integer getAssignedTo() {
         return assignedTo;
     }
@@ -87,6 +97,14 @@ public class HousekeepingTask {
             throw new IllegalArgumentException("AssignedTo user id cannot be null");
         }
         this.assignedTo = assignedTo;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
+    }
+
+    public void setAssignedToName(String assignedToName) {
+        this.assignedToName = assignedToName;
     }
 
     public LocalDate getTaskDate() {

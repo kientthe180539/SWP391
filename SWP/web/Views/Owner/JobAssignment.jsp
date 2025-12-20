@@ -24,11 +24,8 @@
 
                     <div class="container-fluid py-4 px-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h2 class="mb-0">Job Assignment</h2>
-                            <form class="d-flex gap-2" action="<c:url value='/owner/assignments'/>" method="get">
-                                <input type="date" name="date" class="form-control" value="${date}"
-                                    onchange="this.form.submit()">
-                            </form>
+                            <h2 class="mb-0">Manage Staff Shifts</h2>
+                            <!-- Date picker removed for permanent shifts -->
                         </div>
 
                         <div class="row">
@@ -40,15 +37,30 @@
                                     <div class="card-body">
                                         <form action="<c:url value='/owner/assignments'/>" method="post">
                                             <input type="hidden" name="action" value="createAssignment">
-                                            <input type="hidden" name="date" value="${date}">
+                                            <!-- Date hidden input removed -->
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Filter by Role</label>
+                                                <select id="roleFilter" class="form-select"
+                                                    onchange="filterEmployees()">
+                                                    <option value="">All Roles</option>
+                                                    <option value="6">Manager</option>
+                                                    <option value="2">Reception</option>
+                                                    <option value="3">Housekeeping</option>
+                                                </select>
+                                            </div>
 
                                             <div class="mb-3">
                                                 <label class="form-label">Employee</label>
-                                                <select name="employeeId" class="form-select" required>
+                                                <select name="employeeId" id="employeeSelect" class="form-select"
+                                                    required>
                                                     <option value="">Select Employee</option>
                                                     <c:forEach items="${employees}" var="e">
-                                                        <option value="${e.userId}">${e.fullName} (${e.roleId == 2 ?
-                                                            'Reception' : 'Housekeeping'})</option>
+                                                        <option value="${e.userId}" data-role-id="${e.roleId}">
+                                                            ${e.fullName} (${e.roleId == 6 ? 'Manager' : (e.roleId == 2
+                                                            ? 'Reception' : (e.roleId == 3 ? 'Housekeeping' :
+                                                            'Staff'))})
+                                                        </option>
                                                     </c:forEach>
                                                 </select>
                                             </div>
@@ -71,7 +83,7 @@
                             <div class="col-md-8">
                                 <div class="card shadow-sm">
                                     <div class="card-header bg-white">
-                                        <h5 class="mb-0">Assignments for ${date}</h5>
+                                        <h5 class="mb-0">current Staff Roster</h5>
                                     </div>
                                     <div class="card-body p-0">
                                         <div class="table-responsive">
@@ -88,7 +100,7 @@
                                                     <c:if test="${empty assignments}">
                                                         <tr>
                                                             <td colspan="4" class="text-center py-4 text-muted">No
-                                                                assignments for this date.</td>
+                                                                active shifts assigned.</td>
                                                         </tr>
                                                     </c:if>
                                                     <c:forEach items="${assignments}" var="a">
@@ -134,6 +146,31 @@
             </div>
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                function filterEmployees() {
+                    var roleId = document.getElementById("roleFilter").value;
+                    var employeeSelect = document.getElementById("employeeSelect");
+                    var options = employeeSelect.options;
+
+                    // Show/Hide options
+                    for (var i = 1; i < options.length; i++) { // Start at 1 to skip "Select Employee"
+                        var opt = options[i];
+                        var optRole = opt.getAttribute("data-role-id");
+
+                        if (roleId === "" || optRole === roleId) {
+                            opt.style.display = "block";
+                        } else {
+                            opt.style.display = "none";
+                        }
+                    }
+
+                    // Reset selection if current selected is hidden
+                    var selectedOpt = options[employeeSelect.selectedIndex];
+                    if (selectedOpt.style.display === "none") {
+                        employeeSelect.value = "";
+                    }
+                }
+            </script>
         </body>
 
         </html>

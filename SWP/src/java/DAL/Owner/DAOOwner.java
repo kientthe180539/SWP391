@@ -68,7 +68,7 @@ public class DAOOwner extends DBContext {
     public List<User> getEmployees(String search, String roleIdStr, String statusStr,
             String sortBy, String sortOrder, int page, int pageSize) {
         List<User> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM users WHERE role_id IN (2, 3)");
+        StringBuilder sql = new StringBuilder("SELECT * FROM users WHERE role_id NOT IN (1, 4, 5)");
 
         if (search != null && !search.isBlank()) {
             sql.append(" AND (username LIKE ? OR full_name LIKE ? OR email LIKE ? OR phone LIKE ?)");
@@ -334,13 +334,15 @@ public class DAOOwner extends DBContext {
         // Using stored procedure or raw insert
         // Assuming we use raw insert for now as sp_create_user might not exist or we
         // don't know it
+
+        // Fix: Use the plainPassword if provided to set hash
+        if (plainPassword != null && !plainPassword.isBlank()) {
+            user.setPlainPassword(plainPassword);
+        }
+
         String sql = "INSERT INTO users (username, password_hash, full_name, email, phone, role_id, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, user.getUsername());
-            // Hash password here or in controller. Let's assume controller/model handles
-            // hashing
-            // But wait, User model has setPlainPassword which hashes it.
-            // If we receive a User object with passwordHash already set:
             ps.setString(2, user.getPasswordHash());
             ps.setString(3, user.getFullName());
             ps.setString(4, user.getEmail());
@@ -422,9 +424,8 @@ public class DAOOwner extends DBContext {
                         sa.setStatus(StaffAssignment.StaffStatus.ON_SHIFT);
                     }
 
-                    // We might need to extend StaffAssignment model to hold employee name or fetch
-                    // it separately
-                    // For now, we'll just return the assignment object.
+                    sa.setEmployeeName(rs.getString("employee_name"));
+
                     list.add(sa);
                 }
             }
@@ -451,6 +452,75 @@ public class DAOOwner extends DBContext {
         String sql = "DELETE FROM staff_assignments WHERE assignment_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, assignmentId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            Logger.getLogger(DAOOwner.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+
+    // ==========================================
+    // PERMANENT SHIFT MANAGEMENT
+    // ==========================================
+
+    /**
+     * Gets the latest assignment for all staff members who have one.
+     * Use this for "Permanent Shift" view.
+     */
+    public List<StaffAssignment> getAllCurrentAssignments() {
+        List<StaffAssignment> list = new ArrayList<>();
+        // Logic: Get the assignment with MAX(assignment_id) for each employee
+        String sql = "SELECT sa.*, u.full_name as employee_name " +
+                "FROM staff_assignments sa " +
+                "JOIN users u ON sa.employee_id = u.user_id " +
+                "JOIN (SELECT employee_id, MAX(assignment_id) as max_id FROM staff_assignments GROUP BY employee_id) latest "
+                +
+                "ON sa.assignment_id = latest.max_id " +
+                "ORDER BY sa.shift_type, sa.employee_id";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                StaffAssignment sa = new StaffAssignment();
+                sa.setAssignmentId(rs.getInt("assignment_id"));
+                sa.setEmployeeId(rs.getInt("employee_id"));
+                sa.setWorkDate(rs.getDate("work_date").toLocalDate());
+
+                try {
+                    sa.setShiftType(StaffAssignment.ShiftType.valueOf(rs.getString("shift_type")));
+                } catch (Exception e) {
+                    sa.setShiftType(StaffAssignment.ShiftType.MORNING);
+                }
+
+                try {
+                    sa.setStatus(StaffAssignment.StaffStatus.valueOf(rs.getString("status")));
+                } catch (Exception e) {
+                    sa.setStatus(StaffAssignment.StaffStatus.ON_SHIFT);
+                }
+
+                sa.setEmployeeName(rs.getString("employee_name"));
+                list.add(sa);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DAOOwner.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }
+
+    /**
+     * "Upserts" an assignment.
+     * Since we want to keep history but treat it as permanent, we can just insert a
+     * new record
+     * with the current date as the "Effective Date".
+     * The `getAllCurrentAssignments` will automatically pick up this new one as the
+     * latest.
+     */
+    public boolean saveAssignment(int employeeId, String shiftType) {
+        // Insert new record as the "Latest"
+        String sql = "INSERT INTO staff_assignments (employee_id, work_date, shift_type, status, created_at) VALUES (?, NOW(), ?, 'ON_SHIFT', NOW())";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            ps.setString(2, shiftType);
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             Logger.getLogger(DAOOwner.class.getName()).log(Level.SEVERE, null, ex);
@@ -543,6 +613,112 @@ public class DAOOwner extends DBContext {
         return map;
     }
 
+    public List<java.util.Map<String, Object>> getRevenue(LocalDate startDate, LocalDate endDate) {
+        List<java.util.Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT DATE(updated_at) as date, SUM(total_amount) as total " +
+                "FROM bookings " +
+                "WHERE status = 'CHECKED_OUT' AND updated_at BETWEEN ? AND ? " +
+                "GROUP BY DATE(updated_at) " +
+                "ORDER BY DATE(updated_at) ASC";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(startDate));
+            // Add 1 day to end date to ensure the full end day is covered if time is
+            // involved
+            // but for DATE() comparison typically safe. Let's use start of next day for
+            // upper bound if datetime.
+            // But updated_at is TIMESTAMP. So BETWEEN '2023-01-01' AND '2023-01-01' only
+            // covers 00:00:00.
+            // Better to use >= Start AND < End+1.
+            ps.setDate(2, java.sql.Date.valueOf(endDate.plusDays(1)));
+
+            // Adjust SQL for safer date range
+            sql = "SELECT DATE(updated_at) as date, SUM(total_amount) as total " +
+                    "FROM bookings " +
+                    "WHERE status = 'CHECKED_OUT' AND updated_at >= ? AND updated_at < ? " +
+                    "GROUP BY DATE(updated_at) " +
+                    "ORDER BY DATE(updated_at) ASC";
+
+            // Re-prepare statement (simplifying for tools, I will just write the corrected
+            // block directly)
+        } catch (SQLException ignored) {
+        }
+
+        // Correct Implementation Block
+        String safeSql = "SELECT DATE(updated_at) as date, SUM(total_amount) as total " +
+                "FROM bookings " +
+                "WHERE status = 'CHECKED_OUT' AND updated_at >= ? AND updated_at < ? " +
+                "GROUP BY DATE(updated_at) " +
+                "ORDER BY DATE(updated_at) ASC";
+
+        try (PreparedStatement ps = connection.prepareStatement(safeSql)) {
+            ps.setDate(1, java.sql.Date.valueOf(startDate));
+            ps.setDate(2, java.sql.Date.valueOf(endDate.plusDays(1)));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("date", rs.getDate("date").toLocalDate());
+                    map.put("revenue", rs.getBigDecimal("total"));
+                    list.add(map);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DAOOwner.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }
+
+    public List<java.util.Map<String, Object>> getRevenueByRoomType(LocalDate startDate, LocalDate endDate) {
+        List<java.util.Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT rt.type_name, SUM(b.total_amount) as total " +
+                "FROM bookings b " +
+                "JOIN rooms r ON b.room_id = r.room_id " +
+                "JOIN room_types rt ON r.room_type_id = rt.room_type_id " +
+                "WHERE b.status = 'CHECKED_OUT' AND b.updated_at >= ? AND b.updated_at < ? " +
+                "GROUP BY rt.type_name " +
+                "ORDER BY total DESC";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(startDate));
+            ps.setDate(2, java.sql.Date.valueOf(endDate.plusDays(1)));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("type", rs.getString("type_name"));
+                    map.put("revenue", rs.getBigDecimal("total"));
+                    list.add(map);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DAOOwner.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }
+
+    public java.util.Map<String, Integer> getBookingStats(LocalDate startDate, LocalDate endDate) {
+        java.util.Map<String, Integer> map = new java.util.HashMap<>();
+        // Using created_at to count bookings MADE in this period
+        String sql = "SELECT status, COUNT(*) as count FROM bookings " +
+                "WHERE created_at >= ? AND created_at < ? " +
+                "GROUP BY status";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(startDate));
+            ps.setDate(2, java.sql.Date.valueOf(endDate.plusDays(1)));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    map.put(rs.getString("status"), rs.getInt("count"));
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DAOOwner.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return map;
+    }
+
     // ==========================================
     // ROOM TYPE MANAGEMENT
     // ==========================================
@@ -597,12 +773,48 @@ public class DAOOwner extends DBContext {
     }
 
     public boolean deleteRoomType(int id) {
-        String sql = "DELETE FROM room_types WHERE room_type_id=?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
+        // First delete related records in room_type_amenities
+        String deleteAmenitiesSql = "DELETE FROM room_type_amenities WHERE room_type_id=?";
+        String deleteRoomTypeSql = "DELETE FROM room_types WHERE room_type_id=?";
+        
+        try (PreparedStatement psAmenities = connection.prepareStatement(deleteAmenitiesSql);
+             PreparedStatement psRoomType = connection.prepareStatement(deleteRoomTypeSql)) {
+            
+            // Start transaction
+            connection.setAutoCommit(false);
+            
+            try {
+                // Delete from room_type_amenities first
+                psAmenities.setInt(1, id);
+                psAmenities.executeUpdate();
+                
+                // Then delete from room_types
+                psRoomType.setInt(1, id);
+                int result = psRoomType.executeUpdate();
+                
+                // Commit transaction if both deletes succeed
+                connection.commit();
+                return result > 0;
+                
+            } catch (SQLException ex) {
+                // Rollback transaction if any error occurs
+                connection.rollback();
+                throw ex;
+            }
+            
         } catch (SQLException ex) {
             Logger.getLogger(DAOOwner.class.getName()).log(Level.SEVERE, null, ex);
+            try {
+                connection.rollback();
+            } catch (SQLException e) {
+                Logger.getLogger(DAOOwner.class.getName()).log(Level.SEVERE, "Error rolling back transaction", e);
+            }
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException ex) {
+                Logger.getLogger(DAOOwner.class.getName()).log(Level.SEVERE, "Error resetting auto-commit", ex);
+            }
         }
         return false;
     }

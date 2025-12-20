@@ -14,11 +14,13 @@ public class IssueReport {
     public enum IssueType {
         SUPPLY,
         EQUIPMENT,
-        OTHER
+        OTHER,
+        CONFIRMATION
     }
 
     private Integer issueId;
     private Integer roomId;
+    private String roomNumber; // Transient field for display
     private Integer bookingId;
     private Integer reportedBy;
     private IssueType issueType;
@@ -31,14 +33,14 @@ public class IssueReport {
     }
 
     public IssueReport(Integer issueId,
-                       Integer roomId,
-                       Integer bookingId,
-                       Integer reportedBy,
-                       IssueType issueType,
-                       String description,
-                       IssueStatus status,
-                       LocalDateTime createdAt,
-                       LocalDateTime updatedAt) {
+            Integer roomId,
+            Integer bookingId,
+            Integer reportedBy,
+            IssueType issueType,
+            String description,
+            IssueStatus status,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
 
         setIssueId(issueId);
         setRoomId(roomId);
@@ -68,6 +70,14 @@ public class IssueReport {
             throw new IllegalArgumentException("Room id cannot be null");
         }
         this.roomId = roomId;
+    }
+
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public void setRoomNumber(String roomNumber) {
+        this.roomNumber = roomNumber;
     }
 
     public Integer getBookingId() {
@@ -153,4 +163,3 @@ public class IssueReport {
         this.updatedAt = updatedAt;
     }
 }
-

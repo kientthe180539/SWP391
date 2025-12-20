@@ -148,7 +148,7 @@ public class RoomController extends HttpServlet {
             }
 
             int feedbackPageSize = 5;
-            java.util.List<Model.Feedback> feedbacks = DAL.Feedback.DAOFeedback.INSTANCE.getFeedbacksByRoomId(roomId,
+            List<Model.Feedback> feedbacks = DAL.Feedback.DAOFeedback.INSTANCE.getFeedbacksByRoomId(roomId,
                     feedbackPage, feedbackPageSize);
             int totalFeedbacks = DAL.Feedback.DAOFeedback.INSTANCE.countFeedbacksByRoomId(roomId);
             int totalFeedbackPage = (int) Math.ceil((double) totalFeedbacks / feedbackPageSize);

@@ -22,39 +22,45 @@
                             <h2 class="mb-0">Reservation List</h2>
                         </div>
 
-                        <!-- Search and Filter Row -->
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <form method="GET" class="d-flex">
-                                    <input type="hidden" name="status" value="${statusFilter}">
-                                    <input type="text" class="form-control" name="search"
-                                        placeholder="Search by ID, customer name, email, or room..."
-                                        value="${searchQuery}">
-                                    <button type="submit" class="btn btn-primary ms-2">
-                                        <i class="bi bi-search"></i> Search
-                                    </button>
-                                    <c:if test="${not empty searchQuery}">
-                                        <a href="?status=${statusFilter}" class="btn btn-secondary ms-2">
-                                            <i class="bi bi-x-circle"></i>
-                                        </a>
-                                    </c:if>
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body py-3">
+                                <form method="GET" class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light border-end-0"><i
+                                                    class="bi bi-search"></i></span>
+                                            <input type="text" class="form-control border-start-0" name="search"
+                                                placeholder="Search by ID, customer, email..." value="${searchQuery}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select name="status" class="form-select form-select-sm">
+                                            <option value="ALL">All Status</option>
+                                            <option value="PENDING" ${statusFilter=='PENDING' ? 'selected' : '' }>
+                                                Pending</option>
+                                            <option value="CONFIRMED" ${statusFilter=='CONFIRMED' ? 'selected' : '' }>
+                                                Confirmed</option>
+                                            <option value="CHECKED_IN" ${statusFilter=='CHECKED_IN' ? 'selected' : '' }>
+                                                Checked In</option>
+                                            <option value="CHECKED_OUT" ${statusFilter=='CHECKED_OUT' ? 'selected' : ''
+                                                }>
+                                                Checked Out</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select name="sortBy" class="form-select form-select-sm">
+                                            <option value="booking_id" ${sortBy=='booking_id' ? 'selected' : '' }>Sort
+                                                by ID</option>
+                                            <option value="checkin_date" ${sortBy=='checkin_date' ? 'selected' : '' }>
+                                                Sort by Check-in</option>
+                                            <option value="total_amount" ${sortBy=='total_amount' ? 'selected' : '' }>
+                                                Sort by Amount</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
+                                    </div>
                                 </form>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="btn-group w-100">
-                                    <a href="?status=ALL&search=${searchQuery}"
-                                        class="btn btn-sm ${statusFilter == 'ALL' ? 'btn-primary' : 'btn-outline-primary'}">All</a>
-                                    <a href="?status=PENDING&search=${searchQuery}"
-                                        class="btn btn-sm ${statusFilter == 'PENDING' ? 'btn-warning' : 'btn-outline-warning'}">Pending</a>
-                                    <a href="?status=CONFIRMED&search=${searchQuery}"
-                                        class="btn btn-sm ${statusFilter == 'CONFIRMED' ? 'btn-info' : 'btn-outline-info'}">Confirmed</a>
-                                    <a href="?status=CHECKED_IN&search=${searchQuery}"
-                                        class="btn btn-sm ${statusFilter == 'CHECKED_IN' ? 'btn-success' : 'btn-outline-success'}">Checked
-                                        In</a>
-                                    <a href="?status=CHECKED_OUT&search=${searchQuery}"
-                                        class="btn btn-sm ${statusFilter == 'CHECKED_OUT' ? 'btn-secondary' : 'btn-outline-secondary'}">Checked
-                                        Out</a>
-                                </div>
                             </div>
                         </div>
 
@@ -136,28 +142,22 @@
                                         bookings.size()} of ${totalBookings} bookings
                                     </div>
                                     <c:if test="${totalPages > 1}">
-                                        <nav>
-                                            <ul class="pagination mb-0">
-                                                <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                        <ul class="pagination pagination-sm mb-0">
+                                            <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                    href="?page=${currentPage - 1}&search=${searchQuery}&status=${statusFilter}&sortBy=${sortBy}">Previous</a>
+                                            </li>
+                                            <c:forEach begin="1" end="${totalPages}" var="p">
+                                                <li class="page-item ${currentPage == p ? 'active' : ''}">
                                                     <a class="page-link"
-                                                        href="?status=${statusFilter}&search=${searchQuery}&page=${currentPage - 1}">
-                                                        <i class="bi bi-chevron-left"></i>
-                                                    </a>
+                                                        href="?page=${p}&search=${searchQuery}&status=${statusFilter}&sortBy=${sortBy}">${p}</a>
                                                 </li>
-                                                <c:forEach begin="1" end="${totalPages}" var="i">
-                                                    <li class="page-item ${currentPage == i ? 'active' : ''}">
-                                                        <a class="page-link"
-                                                            href="?status=${statusFilter}&search=${searchQuery}&page=${i}">${i}</a>
-                                                    </li>
-                                                </c:forEach>
-                                                <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                                                    <a class="page-link"
-                                                        href="?status=${statusFilter}&search=${searchQuery}&page=${currentPage + 1}">
-                                                        <i class="bi bi-chevron-right"></i>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </nav>
+                                            </c:forEach>
+                                            <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                    href="?page=${currentPage + 1}&search=${searchQuery}&status=${statusFilter}&sortBy=${sortBy}">Next</a>
+                                            </li>
+                                        </ul>
                                     </c:if>
                                 </div>
                             </div>

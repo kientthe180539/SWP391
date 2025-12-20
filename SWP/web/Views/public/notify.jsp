@@ -6,9 +6,22 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
-            const type = "${type}".trim().toString();
-            const mess = "${mess}".trim().toString();
+            // Check request attributes first, then session attributes
+            let type = "${type}".trim().toString();
+            let mess = "${mess}".trim().toString();
             const href = "${href}".trim().toString();
+
+            // Also check session-based success/error messages
+            const sessionSuccess = "${sessionScope.success}".trim().toString();
+            const sessionError = "${sessionScope.error}".trim().toString();
+
+            if (sessionSuccess && sessionSuccess !== "") {
+                type = "success";
+                mess = sessionSuccess;
+            } else if (sessionError && sessionError !== "") {
+                type = "error";
+                mess = sessionError;
+            }
 
             if (type === "success") {
                 if (href) {
@@ -61,3 +74,7 @@
             }
         });
     </script>
+
+    <!-- Clear session messages after display -->
+    <c:remove var="success" scope="session" />
+    <c:remove var="error" scope="session" />

@@ -59,18 +59,15 @@
                         </div>
 
                         <c:if test="${not empty param.success}">
-                            <div class="alert alert-success alert-dismissible fade show">
-                                Inspection task assigned successfully!
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
+                            <c:set var="type" value="success" scope="request" />
+                            <c:set var="mess" value="Inspection task assigned successfully!" scope="request" />
                         </c:if>
-
                         <c:if test="${not empty param.error}">
-                            <div class="alert alert-danger alert-dismissible fade show">
-                                Failed to assign inspection task. Please try again.
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
+                            <c:set var="type" value="error" scope="request" />
+                            <c:set var="mess" value="Failed to assign inspection task. Please try again."
+                                scope="request" />
                         </c:if>
+                        <jsp:include page="../public/notify.jsp" />
 
                         <div class="card shadow-sm">
                             <div class="card-body p-0">
@@ -192,16 +189,7 @@
                                                     </td>
                                                     <td class="fw-bold">${booking.totalAmount} VND</td>
                                                     <td>
-                                                        <%-- Only show Assign Check-in for CONFIRMED bookings without
-                                                            check-in task --%>
-                                                            <c:if
-                                                                test="${booking.status == 'CONFIRMED' && !hasCheckinTask[booking.bookingId]}">
-                                                                <button class="btn btn-sm btn-primary"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#assignModal${booking.bookingId}">
-                                                                    <i class="bi bi-person-check"></i> Assign Check-in
-                                                                </button>
-                                                            </c:if>
+                                                        <%-- Auto-assigned Check-in task status --%>
 
                                                             <%-- Show "Preparing..." status if check-in task assigned
                                                                 but not checked in yet --%>
@@ -213,39 +201,31 @@
                                                                     </span>
                                                                 </c:if>
 
-                                                                <%-- Only show Assign Check-out when guest is CHECKED_IN
-                                                                    and no checkout task assigned --%>
-                                                                    <c:if
-                                                                        test="${booking.status == 'CHECKED_IN' && !hasCheckoutTask[booking.bookingId]}">
-                                                                        <button class="btn btn-sm btn-warning"
-                                                                            data-bs-toggle="modal"
-                                                                            data-bs-target="#assignCheckoutModal${booking.bookingId}">
-                                                                            <i class="bi bi-box-arrow-right"></i> Assign
-                                                                            Check-out
-                                                                        </button>
-                                                                    </c:if>
+                                                                <%-- Only show Assign Check-out when guest is
+                                                                    CHECKED_OUT (Receptionist confirmed) and no checkout
+                                                                    task assigned --%>
+                                                                    <%-- Auto-assigned Check-out task status --%>
 
-                                                                    <%-- Show "Processing checkout..." if checkout task
-                                                                        assigned --%>
-                                                                        <c:if
-                                                                            test="${booking.status == 'CHECKED_IN' && hasCheckoutTask[booking.bookingId]}">
-                                                                            <span class="text-warning small">
-                                                                                <i class="bi bi-hourglass-split"></i>
-                                                                                Processing checkout...
-                                                                            </span>
-                                                                        </c:if>
-
-                                                                        <%-- Show status for other booking states --%>
-                                                                            <c:if test="${booking.status == 'PENDING'}">
-                                                                                <span class="text-muted small">Awaiting
-                                                                                    confirmation</span>
-                                                                            </c:if>
+                                                                        <%-- Show "Processing checkout..." if checkout
+                                                                            task assigned --%>
                                                                             <c:if
-                                                                                test="${booking.status == 'CHECKED_OUT'}">
-                                                                                <span class="text-success small"><i
-                                                                                        class="bi bi-check-circle"></i>
-                                                                                    Completed</span>
+                                                                                test="${booking.status == 'CHECKED_OUT' && hasCheckoutTask[booking.bookingId]}">
+                                                                                <span class="text-warning small">
+                                                                                    <i
+                                                                                        class="bi bi-hourglass-split"></i>
+                                                                                    Processing cleaning...
+                                                                                </span>
                                                                             </c:if>
+
+                                                                            <%-- Show status for other booking states
+                                                                                --%>
+                                                                                <c:if
+                                                                                    test="${booking.status == 'PENDING'}">
+                                                                                    <span
+                                                                                        class="text-muted small">Awaiting
+                                                                                        confirmation</span>
+                                                                                </c:if>
+
                                                     </td>
                                                 </tr>
                                             </c:forEach>
@@ -310,106 +290,10 @@
                             </div>
                         </div>
 
-                        <!-- All Modals - Outside table to avoid nesting issues -->
-                        <c:forEach items="${bookings}" var="booking">
-                            <!-- Checkin Modal -->
-                            <div class="modal fade" id="assignModal${booking.bookingId}" tabindex="-1">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Assign Check-in Inspection</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <form method="POST">
-                                            <div class="modal-body">
-                                                <input type="hidden" name="bookingId" value="${booking.bookingId}">
-                                                <input type="hidden" name="inspectionType" value="CHECKIN">
-
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-bold">Booking Details</label>
-                                                    <div class="alert alert-light">
-                                                        <div><strong>Booking:</strong> #${booking.bookingId}</div>
-                                                        <div><strong>Customer:</strong> ${booking.customer.fullName}
-                                                        </div>
-                                                        <div><strong>Room:</strong> ${booking.room.roomNumber}</div>
-                                                        <div><strong>Check-in Date:</strong> ${booking.checkinDate}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-bold">Assign to Housekeeping
-                                                        Staff</label>
-                                                    <select name="assignedTo" class="form-select" required>
-                                                        <option value="">Select Staff</option>
-                                                        <c:forEach items="${staffList}" var="staff">
-                                                            <option value="${staff.userId}">${staff.fullName}</option>
-                                                        </c:forEach>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-primary">Assign Task</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Checkout Modal -->
-                            <div class="modal fade" id="assignCheckoutModal${booking.bookingId}" tabindex="-1">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Assign Check-out Inspection</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <form method="POST">
-                                            <div class="modal-body">
-                                                <input type="hidden" name="bookingId" value="${booking.bookingId}">
-                                                <input type="hidden" name="inspectionType" value="CHECKOUT">
-
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-bold">Booking Details</label>
-                                                    <div class="alert alert-light">
-                                                        <div><strong>Booking:</strong> #${booking.bookingId}</div>
-                                                        <div><strong>Customer:</strong> ${booking.customer.fullName}
-                                                        </div>
-                                                        <div><strong>Room:</strong> ${booking.room.roomNumber}</div>
-                                                        <div><strong>Check-out Date:</strong> ${booking.checkoutDate}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-bold">Assign to Housekeeping
-                                                        Staff</label>
-                                                    <select name="assignedTo" class="form-select" required>
-                                                        <option value="">Select Staff</option>
-                                                        <c:forEach items="${staffList}" var="staff">
-                                                            <option value="${staff.userId}">${staff.fullName}</option>
-                                                        </c:forEach>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-warning">Assign Task</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </c:forEach>
-                    </div>
-
-                    <jsp:include page="../Shared/Footer.jsp" />
-                </div>
-            </div>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+                        <!-- Modals removed as assignment is automatic -->
+                        <script>
+                            // Script removed
+                        </script>
         </body>
 
         </html>

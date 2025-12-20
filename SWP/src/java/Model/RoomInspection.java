@@ -8,6 +8,7 @@ public class RoomInspection {
     public enum Type {
         CHECKIN,
         CHECKOUT,
+        ROUTINE,
         DAILY,
         SUPPLY
     }

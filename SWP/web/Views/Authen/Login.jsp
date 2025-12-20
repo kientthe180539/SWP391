@@ -12,7 +12,7 @@
                 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
                     rel="stylesheet">
 
-                <!-- Dùng chung CSS với Register -->
+                <!-- Share CSS with Register -->
                 <link rel="stylesheet" href="CSS/Authen/login.css">
                 <link rel="stylesheet"
                     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -41,13 +41,13 @@
                                 <div class="form-group">
                                     <label>Email or Phone Number</label>
                                     <input type="text" name="identifier" placeholder="you@gmail.com or 0912345678"
-                                        value="${identifier}" required>
+                                        value="${email}" required>
                                 </div>
 
                                 <div class="form-group" style="position: relative;">
                                     <label>Password</label>
                                     <input type="password" name="password" id="passwordInput"
-                                        placeholder="Enter your password" required style="padding-right: 40px;">
+                                        placeholder="Enter your password" required style="padding-right: 40px;" value="${password}">
                                     <i class="bi bi-eye" id="togglePassword"
                                         onclick="togglePasswordVisibility('passwordInput', this)"
                                         style="position: absolute; right: 15px; top: 38px; cursor: pointer; color: #6b7280; font-size: 1.2rem;"></i>
@@ -89,12 +89,6 @@
                                     }
                                 }
                             </script>
-
-                            </div>
-                            </main>
-
-                            <%@include file="../Components/Footer.jsp" %>
-                                <%@ include file="../public/notify.jsp" %>
 
             </body>
 
